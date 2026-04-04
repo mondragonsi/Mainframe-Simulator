@@ -1,0 +1,13 @@
+# Build output
+build/
+*.exe
+*.o
+
+# IDE / editor
+.vscode/
+*.suo
+*.user
+.DS_Store
+
+# Claude memory (local only)
+.claude/
