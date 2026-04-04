@@ -14,6 +14,39 @@
 #include "../zos/address_space.h"
 #include "../datasets/datasets.h"
 
+/* =========================================================================
+ * PF KEY HANDLING  (ISPF standard: PF1=HELP PF3=END PF7=UP PF8=DOWN PF12=CANCEL)
+ * ========================================================================= */
+typedef enum {
+    PF_NONE=0,PF1,PF2,PF3,PF4,PF5,PF6,PF7,PF8,PF9,PF10,PF11,PF12,
+    PF13,PF14,PF15,PF16,PF17,PF18,PF19,PF20,PF21,PF22,PF23,PF24
+} PF_KEY;
+
+static PF_KEY term_read_input(char *buf, int maxlen) {
+    if (!fgets(buf,maxlen,stdin)) { buf[0]=0; return PF_NONE; }
+    int n=(int)strlen(buf);
+    while(n>0&&(buf[n-1]==10||buf[n-1]==13)) buf[--n]=0;
+    if (n>=3 && buf[0]==27) {
+        static const struct { const char *seq; PF_KEY k; } map[]={
+            {"[11~",PF1},{"[12~",PF2},{"[13~",PF3},{"[14~",PF4},
+            {"[15~",PF5},{"[17~",PF6},{"[18~",PF7},{"[19~",PF8},
+            {"[20~",PF9},{"[21~",PF10},{"[23~",PF11},{"[24~",PF12},
+            {"OP",PF1},{"OQ",PF2},{"OR",PF3},{"OS",PF4},
+            {NULL,PF_NONE}
+        };
+        for(int i=0;map[i].seq;i++)
+            if(strcmp(buf,map[i].seq)==0){buf[0]=0;return map[i].k;}
+        buf[0]=0; return PF_NONE;
+    }
+    return PF_NONE;
+}
+
+static void term_pf_bar(void) {
+    printf("%s F1=Help  F3=End   F7=Up    F8=Down  F12=Cancel                              %s\n",
+           TERM_REVERSE, TERM_RESET);
+}
+
+
 /* Global terminal context */
 static IMS_TERMINAL terminal;
 
@@ -707,35 +740,32 @@ void terminal_ds_panel(void) {
         terminal_header("DFSMS DATASET MANAGER");
 
         printf("\n");
-        printf(" %sDFSMS DATASET SERVICES%s\n", TERM_BOLD, TERM_RESET);
-        printf(" %-40s %s\n", "Catalog entries:", "");
-        printf("   Total entries: %d\n", zos_catalog.count);
+        printf(" %sDFSMS DATASET SERVICES%s         Catalog entries: %d\n",
+               TERM_BOLD, TERM_RESET, zos_catalog.count);
         printf("\n");
-        printf(" %sCommands:%s\n", TERM_CYAN, TERM_RESET);
-        printf("   %-12s - List all catalog entries\n", "LISTCAT");
-        printf("   %-12s - List specific DSN (e.g., LISTCAT MY.DATA)\n", "LISTCAT dsn");
-        printf("   %-12s - Run IDCAMS command stream\n", "IDCAMS ...");
-        printf("   %-12s - Browse dataset records\n", "BROWSE dsn");
-        printf("   %-12s - Return to main menu\n", "END or Q");
+        printf(" %sQuick Start:%s\n", TERM_GREEN, TERM_RESET);
+        printf("   1. ALLOC MY.DATA PS RECFM(FB) LRECL(80)   -- allocate a dataset\n");
+        printf("   2. WRITE MY.DATA                           -- add records interactively\n");
+        printf("   3. BROWSE MY.DATA                         -- view records\n");
+        printf("   4. DELETE MY.DATA                         -- delete dataset\n");
         printf("\n");
-        printf(" %sIDCAMS Examples:%s\n", TERM_YELLOW, TERM_RESET);
-        printf("   DEFINE CLUSTER (NAME(MY.KSDS) INDEXED KEYS(8,0) RECSZ(80,80))\n");
-        printf("   LISTCAT ALL\n");
-        printf("   DELETE MY.KSDS\n");
+        printf(" %sAll Commands:%s\n", TERM_CYAN, TERM_RESET);
+        printf("   %-30s List catalog (all or specific DSN)\n", "LISTCAT [dsn]");
+        printf("   %-30s Allocate PS or PDS dataset\n",         "ALLOC dsn PS|PDS [RECFM(x)] [LRECL(n)]");
+        printf("   %-30s Write records to PS dataset\n",        "WRITE dsn");
+        printf("   %-30s Browse dataset contents\n",            "BROWSE dsn");
+        printf("   %-30s Delete dataset from catalog\n",        "DELETE dsn");
+        printf("   %-30s Run IDCAMS command\n",                 "IDCAMS [command]");
+        printf("   %-30s Define VSAM cluster\n",                "DEFINE CLUSTER (...)");
         printf("\n");
-        terminal_footer();
+        term_pf_bar();
         printf(" COMMAND ===> ");
         fflush(stdout);
 
-        if (!fgets(input, sizeof(input), stdin)) break;
-        /* strip newline */
-        int len = (int)strlen(input);
-        while (len > 0 && (input[len-1] == '\n' || input[len-1] == '\r'))
-            input[--len] = '\0';
-
+        PF_KEY pf = term_read_input(input, (int)sizeof(input));
+        if (pf == PF3 || pf == PF12) break;
         if (!input[0]) continue;
 
-        /* Uppercase the first word for command matching */
         char cmd[32] = {0};
         sscanf(input, "%31s", cmd);
         for (int i = 0; cmd[i]; i++) cmd[i] = (char)toupper((unsigned char)cmd[i]);
@@ -746,16 +776,13 @@ void terminal_ds_panel(void) {
         }
 
         if (strcmp(cmd, "LISTCAT") == 0) {
-            /* Check if specific DSN given */
             char dsn[DS_DSN_LEN + 1] = {0};
             if (sscanf(input, "%*s %44s", dsn) == 1) {
-                /* Try as GDG base first */
                 ZOS_DATASET *ds = ds_catalog_find(dsn);
-                if (ds && ds->dsorg == DSORG_GDG) {
+                if (ds && ds->dsorg == DSORG_GDG)
                     gdg_listcat_base(dsn);
-                } else {
+                else
                     ds_catalog_listcat(dsn);
-                }
             } else {
                 ds_catalog_listcat(NULL);
             }
@@ -765,28 +792,148 @@ void terminal_ds_panel(void) {
             continue;
         }
 
+        if (strcmp(cmd, "ALLOC") == 0) {
+            char dsn[DS_DSN_LEN + 1] = {0};
+            char dsorg_str[8] = "PS";
+            char rest_opts[128] = {0};
+            char tmp1[64]={0}, tmp2[64]={0};
+            int parsed = sscanf(input, "%*s %44s %7s %127[^\n]", dsn, tmp1, tmp2);
+            if (parsed >= 1) {
+                if (parsed >= 2) {
+                    char up[8]={0};
+                    for (int i=0; tmp1[i] && i<7; i++)
+                        up[i]=(char)toupper((unsigned char)tmp1[i]);
+                    if (strcmp(up,"PS")==0||strcmp(up,"PO")==0||strcmp(up,"PDS")==0) {
+                        strncpy(dsorg_str, up, sizeof(dsorg_str)-1);
+                        if (parsed >= 3) strncpy(rest_opts, tmp2, sizeof(rest_opts)-1);
+                    } else {
+                        snprintf(rest_opts, sizeof(rest_opts), "%s %s", tmp1,
+                                 parsed>=3 ? tmp2 : "");
+                    }
+                }
+                char alloc_cmd[512];
+                snprintf(alloc_cmd, sizeof(alloc_cmd),
+                         "ALLOCATE NAME(%s) %s %s", dsn, dsorg_str, rest_opts);
+                printf("\n --- IDCAMS ALLOCATE ---\n");
+                int rc = idcams_run(alloc_cmd);
+                printf(" --- RC=%d ---\n", rc);
+            } else {
+                printf(" Syntax: ALLOC <dsn> [PS|PDS] [RECFM(x)] [LRECL(n)]\n");
+            }
+            printf("\n Press ENTER to continue...");
+            fflush(stdout);
+            getchar();
+            continue;
+        }
+        if (strcmp(cmd, "WRITE") == 0) {
+            char dsn[DS_DSN_LEN + 1] = {0};
+            if (sscanf(input, "%*s %44s", dsn) != 1) {
+                printf(" Syntax: WRITE <dsn>\n");
+                printf("\n Press ENTER to continue...");
+                fflush(stdout);
+                getchar();
+                continue;
+            }
+            ZOS_DATASET *ds = ds_catalog_find(dsn);
+            if (!ds) {
+                printf(" IGD101I DATASET '%s' NOT IN CATALOG\n", dsn);
+                printf(" Tip: use ALLOC %s PS RECFM(FB) LRECL(80) first\n", dsn);
+                printf("\n Press ENTER to continue...");
+                fflush(stdout);
+                getchar();
+                continue;
+            }
+            if (ds->dsorg != DSORG_PS) {
+                printf(" IEC020I WRITE only supported for PS (sequential) datasets\n");
+                printf("\n Press ENTER to continue...");
+                fflush(stdout);
+                getchar();
+                continue;
+            }
+            ZOS_DCB *dcb = ps_open(dsn, "WRITE", OPEN_EXTEND,
+                                   ds->recfm, ds->lrecl, ds->blksize);
+            if (!dcb) {
+                printf(" IEC030I OPEN FAILED for %s\n", dsn);
+                printf("\n Press ENTER to continue...");
+                fflush(stdout);
+                getchar();
+                continue;
+            }
+            int lrecl = dcb->lrecl > 0 ? dcb->lrecl : 80;
+            printf("\n WRITE: %s  RECFM=%s  LRECL=%d\n", dsn,
+                   ds->recfm==RECFM_FB?"FB":ds->recfm==RECFM_VB?"VB":
+                   ds->recfm==RECFM_F?"F":ds->recfm==RECFM_V?"V":"U", lrecl);
+            printf(" Enter records (blank line or PF3 to stop):\n");
+            printf(" --------------------------------------------------------------------------------\n");
+            int written = 0;
+            char rec[32761];
+            while (1) {
+                printf(" +%04d> ", written + 1);
+                fflush(stdout);
+                PF_KEY wpf = term_read_input(rec, (int)sizeof(rec));
+                if (wpf == PF3 || wpf == PF12 || !rec[0]) break;
+                int rc_w = ps_write(dcb, rec, (int)strlen(rec));
+                if (rc_w != DS_OK) {
+                    printf(" IEC040I WRITE ERROR RC=%d\n", rc_w);
+                    break;
+                }
+                written++;
+            }
+            ps_close(dcb);
+            printf(" --------------------------------------------------------------------------------\n");
+            printf(" IEF285I %s: %d RECORD(S) WRITTEN\n", dsn, written);
+            printf("\n Press ENTER to continue...");
+            fflush(stdout);
+            getchar();
+            continue;
+        }
+
+        if (strcmp(cmd, "DELETE") == 0) {
+            char dsn[DS_DSN_LEN + 1] = {0};
+            if (sscanf(input, "%*s %44s", dsn) != 1) {
+                printf(" Syntax: DELETE <dsn>\n");
+            } else {
+                char del_cmd[64];
+                snprintf(del_cmd, sizeof(del_cmd), "DELETE %s", dsn);
+                printf("\n --- IDCAMS DELETE ---\n");
+                int rc = idcams_run(del_cmd);
+                printf(" --- RC=%d ---\n", rc);
+            }
+            printf("\n Press ENTER to continue...");
+            fflush(stdout);
+            getchar();
+            continue;
+        }
+
+        if (strcmp(cmd, "DEFINE") == 0) {
+            printf("\n --- IDCAMS DEFINE ---\n");
+            int rc = idcams_run(input);
+            printf(" --- RC=%d ---\n", rc);
+            printf("\n Press ENTER to continue...");
+            fflush(stdout);
+            getchar();
+            continue;
+        }
         if (strcmp(cmd, "IDCAMS") == 0) {
-            /* Pass the rest of the line after "IDCAMS " as a command */
-            const char *rest = input + 6;  /* skip "IDCAMS" */
+            const char *rest = input + 6;
             while (*rest == ' ') rest++;
             if (*rest) {
                 printf("\n --- IDCAMS OUTPUT ---\n");
                 int rc = idcams_run(rest);
                 printf(" --- IDCAMS RC=%d ---\n", rc);
             } else {
-                /* Interactive multi-line IDCAMS input */
-                printf(" Enter IDCAMS commands (blank line to execute, END to cancel):\n");
+                printf(" Enter IDCAMS commands (blank line=execute, END=cancel):\n");
                 char cmdbuf[4096] = {0};
                 char line[256];
                 while (1) {
                     printf(" > ");
                     fflush(stdout);
                     if (!fgets(line, sizeof(line), stdin)) break;
-                    len = (int)strlen(line);
-                    while (len > 0 && (line[len-1] == '\n' || line[len-1] == '\r'))
-                        line[--len] = '\0';
-                    if (!line[0] || strcmp(line, "END") == 0) break;
-                    if (strlen(cmdbuf) + strlen(line) + 2 < sizeof(cmdbuf)) {
+                    int ll = (int)strlen(line);
+                    while (ll > 0 && (line[ll-1]=='\n'||line[ll-1]=='\r'))
+                        line[--ll] = '\0';
+                    if (!line[0] || strcmp(line,"END")==0) break;
+                    if (strlen(cmdbuf)+strlen(line)+2 < sizeof(cmdbuf)) {
                         strcat(cmdbuf, line);
                         strcat(cmdbuf, "\n");
                     }
@@ -816,17 +963,18 @@ void terminal_ds_panel(void) {
                                            ds->recfm, ds->lrecl, ds->blksize);
                     if (dcb) {
                         printf("\n BROWSE: %s  RECFM=%s  LRECL=%d\n", dsn,
-                               ds->recfm == RECFM_FB ? "FB" :
-                               ds->recfm == RECFM_VB ? "VB" :
-                               ds->recfm == RECFM_F  ? "F"  :
-                               ds->recfm == RECFM_V  ? "V"  : "U",
+                               ds->recfm==RECFM_FB?"FB":ds->recfm==RECFM_VB?"VB":
+                               ds->recfm==RECFM_F?"F":ds->recfm==RECFM_V?"V":"U",
                                ds->lrecl);
-                        printf(" %s\n", "------------------------------------------------------------------------");
+                        printf(" --------------------------------------------------------------------------------\n");
                         char buf[32761];
-                        int rlen; int shown = 0;
-                        while (ps_read(dcb, buf, &rlen) == DS_OK && shown < 50) {
+                        int rlen, shown = 0;
+                        while (ps_read(dcb, buf, &rlen)==DS_OK && shown < 50) {
                             buf[rlen] = '\0';
-                            printf(" |%-.*s|\n", rlen > 78 ? 78 : rlen, buf);
+                            int tl = rlen;
+                            while (tl > 0 && buf[tl-1]==' ') tl--;
+                            buf[tl] = '\0';
+                            printf(" %04d  %s\n", shown+1, buf);
                             shown++;
                         }
                         if (shown == 0) printf(" (EMPTY DATASET)\n");
@@ -849,8 +997,25 @@ void terminal_ds_panel(void) {
             continue;
         }
 
-        printf(" Unknown command: %s\n", cmd);
-        printf(" Press ENTER to continue...");
+        if (pf == PF1) {
+            printf("\n Dataset Manager Help:\n");
+            printf("  ALLOC dsn PS [RECFM(FB)] [LRECL(80)]  -- allocate sequential dataset\n");
+            printf("  ALLOC dsn PDS                         -- allocate partitioned dataset\n");
+            printf("  WRITE dsn                             -- append records (blank=end)\n");
+            printf("  BROWSE dsn                            -- view records\n");
+            printf("  DELETE dsn                            -- delete from catalog\n");
+            printf("  LISTCAT [dsn]                         -- list catalog\n");
+            printf("  DEFINE CLUSTER (NAME(...) INDEXED ...) -- define VSAM cluster\n");
+            printf("  IDCAMS [cmd]                          -- run raw IDCAMS command\n");
+            printf("  PF3 or END                            -- return to main menu\n");
+            printf("\n Press ENTER to continue...");
+            fflush(stdout);
+            getchar();
+            continue;
+        }
+
+        printf(" Unknown command: %s  (PF1=Help PF3=End)\n", cmd);
+        printf("\n Press ENTER to continue...");
         fflush(stdout);
         getchar();
     }

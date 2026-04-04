@@ -127,6 +127,92 @@ static int extract_paren_value(const char *token, char *out, int outlen) {
 }
 
 /* =========================================================================
+ * ALLOCATE
+ *
+ * Allocates a non-VSAM dataset (PS or PDS) and catalogs it.
+ * This is the IDCAMS equivalent of the TSO ALLOCATE command.
+ *
+ * Real z/OS: Allocation is done via JCL DD statement (DISP=NEW) or
+ * the TSO ALLOCATE command. IDCAMS ALLOCATE is a simulator convenience.
+ *
+ * Supported keywords:
+ *   NAME(dsn)         -- dataset name (required)
+ *   PS or PO or PDS   -- organization (default PS)
+ *   RECFM(FB|VB|F|V)  -- record format (default FB)
+ *   LRECL(n)          -- logical record length (default 80)
+ *   BLKSIZE(n)        -- block size (default 0 = system determined)
+ *   DIRECTORY(n)      -- PDS dir blocks (ignored, no physical limits)
+ *
+ * Examples:
+ *   ALLOCATE (NAME(MY.SEQ.FILE) PS RECFM(FB) LRECL(80) BLKSIZE(800))
+ *   ALLOCATE (NAME(MY.PDS.LIB) PDS RECFM(FB) LRECL(80) DIRECTORY(20))
+ * ========================================================================= */
+
+static int idcams_allocate(const char *command) {
+    char tokens[IDCAMS_MAX_TOKENS][IDCAMS_TOK_LEN];
+    char stripped[512];
+    const char *cmd = strip_outer_parens(command, stripped, sizeof(stripped));
+    int  count = idcams_tokenize(cmd, tokens, IDCAMS_MAX_TOKENS);
+
+    char      dsn[DS_DSN_LEN + 1] = {0};
+    ZOS_DSORG dsorg   = DSORG_PS;
+    ZOS_RECFM recfm   = RECFM_FB;
+    int       lrecl   = 80;
+    int       blksize = 0;
+
+    for (int i = 0; i < count; i++) {
+        if (strncmp(tokens[i], "NAME(", 5) == 0) {
+            extract_paren_value(tokens[i], dsn, sizeof(dsn));
+        } else if (strcmp(tokens[i], "PS")   == 0 ||
+                   strcmp(tokens[i], "SEQ")  == 0) {
+            dsorg = DSORG_PS;
+        } else if (strcmp(tokens[i], "PO")   == 0 ||
+                   strcmp(tokens[i], "PDS")  == 0 ||
+                   strcmp(tokens[i], "PDSE") == 0) {
+            dsorg = DSORG_PO;
+        } else if (strncmp(tokens[i], "RECFM(", 6) == 0) {
+            char val[16];
+            extract_paren_value(tokens[i], val, sizeof(val));
+            recfm = ds_recfm_parse(val);
+        } else if (strncmp(tokens[i], "LRECL(", 6) == 0) {
+            char val[16];
+            extract_paren_value(tokens[i], val, sizeof(val));
+            lrecl = atoi(val);
+        } else if (strncmp(tokens[i], "BLKSIZE(", 8) == 0) {
+            char val[16];
+            extract_paren_value(tokens[i], val, sizeof(val));
+            blksize = atoi(val);
+        }
+        /* DIRECTORY/TRACKS/CYLINDERS accepted, ignored -- no physical limits */
+    }
+
+    if (!dsn[0]) {
+        printf(" IGD17003I ** NAME REQUIRED IN ALLOCATE\n");
+        return 8;
+    }
+    if (ds_catalog_find(dsn)) {
+        printf(" IGD17279I DATASET %s ALREADY EXISTS\n", dsn);
+        return 8;
+    }
+    if (lrecl <= 0 || lrecl > DS_MAX_LRECL) {
+        printf(" IGD17004I ** LRECL %d IS INVALID\n", lrecl);
+        return 8;
+    }
+
+    ZOS_DATASET *ds = ds_catalog_alloc(dsn, dsorg, recfm, lrecl, blksize);
+    if (!ds) {
+        printf(" IGD17001I CATALOG FULL -- CANNOT ALLOCATE %s\n", dsn);
+        return 8;
+    }
+
+    const char *org_str = (dsorg == DSORG_PO) ? "PDS" : "PS";
+    printf(" IEF285I  %s  ALLOCATED\n", dsn);
+    printf(" IGD104I  %s  DSORG=%-3s  RECFM=%-2s  LRECL=%d\n",
+           dsn, org_str, ds_recfm_name(recfm), lrecl);
+    return 0;
+}
+
+/* =========================================================================
  * DEFINE CLUSTER
  *
  * Parses a simplified DEFINE CLUSTER command.
@@ -506,7 +592,9 @@ int idcams_run(const char *command_stream) {
         for (int j = 0; upper[j]; j++)
             upper[j] = (char)toupper((unsigned char)upper[j]);
 
-        if (strncmp(upper, "DEFINE CLUSTER", 14) == 0) {
+        if (strncmp(upper, "ALLOCATE", 8) == 0) {
+            rc = idcams_allocate(cmd + 8);
+        } else if (strncmp(upper, "DEFINE CLUSTER", 14) == 0) {
             rc = idcams_define_cluster(cmd + 14);
         } else if (strncmp(upper, "DEFINE GDG", 10) == 0) {
             rc = idcams_define_gdg(cmd + 10);
