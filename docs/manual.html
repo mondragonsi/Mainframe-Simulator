@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IBM z/OS Mainframe Simulator &#8212; Manual do Usu&#225;rio</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --ibm-blue:#0043CE; --ibm-dark:#001141; --ibm-green:#24A148;
+  --ibm-yellow:#F1C21B; --ibm-red:#DA1E28;
+  --bg:#F4F4F4; --card:#FFF; --border:#E0E0E0; --text:#161616;
+  --term-bg:#1A1A2E; --term-fg:#00FF41; --term-cyan:#4DD0E1;
+}
+html{scroll-behavior:smooth}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.6}
+h1{font-size:2.6rem;font-weight:700;line-height:1.2}
+h2{font-size:1.75rem;font-weight:700;margin-bottom:1rem}
+h3{font-size:1.1rem;font-weight:600;margin-bottom:.5rem;color:var(--ibm-blue)}
+p{margin-bottom:.9rem}
+a{color:var(--ibm-blue)}
+code,kbd{font-family:'Cascadia Code','Consolas',monospace;font-size:.88em}
+kbd{background:#E0E0E0;border:1px solid #BDBDBD;border-bottom-width:3px;border-radius:4px;padding:1px 6px;font-size:.8rem}
+/* NAV */
+nav{position:sticky;top:0;z-index:100;background:var(--ibm-dark);color:#fff;display:flex;align-items:center;gap:2rem;padding:.8rem 2rem;box-shadow:0 2px 8px rgba(0,0,0,.4)}
+.logo{font-weight:700;font-size:1.1rem;color:#fff;text-decoration:none;letter-spacing:1px}
+.logo span{color:var(--ibm-yellow)}
+nav a{color:#C6C6C6;text-decoration:none;font-size:.9rem;transition:color .2s}
+nav a:hover{color:var(--ibm-yellow)}
+.spacer{flex:1}
+.badge{background:var(--ibm-green);color:#fff;border-radius:20px;padding:2px 10px;font-size:.75rem}
+/* HERO */
+.hero{background:linear-gradient(135deg,var(--ibm-dark) 0%,#002D9C 60%,var(--ibm-blue) 100%);color:#fff;padding:5rem 2rem 4rem;text-align:center;position:relative;overflow:hidden}
+.hero-content{position:relative;z-index:1;max-width:800px;margin:0 auto}
+.hero-icon{width:90px;height:90px;background:rgba(255,255,255,.1);border:2px solid rgba(255,255,255,.3);border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:2.8rem;margin:0 auto 1.5rem}
+.hero h1{margin-bottom:.8rem}
+.hero p.sub{font-size:1.1rem;color:#A6C8FF;max-width:600px;margin:0 auto 2rem}
+.hero-btns{display:flex;gap:1rem;justify-content:center;flex-wrap:wrap}
+.btn{padding:.7rem 1.8rem;border-radius:6px;font-weight:600;text-decoration:none;font-size:.95rem;display:inline-flex;align-items:center;gap:.5rem;transition:all .2s}
+.btn-primary{background:var(--ibm-yellow);color:var(--ibm-dark)}
+.btn-primary:hover{background:#E3B400}
+.btn-outline{border:2px solid rgba(255,255,255,.5);color:#fff}
+.btn-outline:hover{background:rgba(255,255,255,.1)}
+.container{max-width:960px;margin:0 auto;padding:0 1.5rem}
+main{padding:3rem 0 5rem}
+section{margin-bottom:4rem}
+.section-header{display:flex;align-items:center;gap:.8rem;margin-bottom:1.5rem;padding-bottom:.8rem;border-bottom:3px solid var(--ibm-blue)}
+.section-icon{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0}
+.icon-blue{background:#EEF4FF}.icon-green{background:#DEFBE6}.icon-yellow{background:#FFF8E1}.icon-purple{background:#F6F2FF}.icon-red{background:#FFF1F1}.icon-teal{background:#E5F6FB}
+.cards{display:grid;gap:1.2rem;grid-template-columns:repeat(auto-fill,minmax(260px,1fr))}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1.4rem;box-shadow:0 1px 4px rgba(0,0,0,.06);transition:box-shadow .2s,transform .2s}
+.card:hover{box-shadow:0 4px 16px rgba(0,67,206,.12);transform:translateY(-2px)}
+.card-icon{font-size:2rem;margin-bottom:.7rem}
+.terminal{background:var(--term-bg);border-radius:12px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.4);margin:1.2rem 0;font-family:'Cascadia Code','Consolas',monospace}
+.term-titlebar{background:#2D2D2D;padding:.5rem 1rem;display:flex;align-items:center;gap:.5rem}
+.term-dot{width:12px;height:12px;border-radius:50%}
+.dot-red{background:#FF5F57}.dot-yellow{background:#FEBC2E}.dot-green{background:#28C840}
+.term-title{flex:1;text-align:center;font-size:.75rem;color:#888;font-family:sans-serif}
+.term-body{padding:1rem 1.4rem 1.4rem;font-size:.82rem;line-height:1.6}
+.t-header{color:var(--term-yellow);font-weight:bold}.t-cyan{color:var(--term-cyan)}.t-green{color:var(--term-fg)}
+.t-dim{color:#6C6C6C}.t-white{color:#E0E0E0}.t-bold{color:#fff;font-weight:bold}
+.t-input{color:var(--term-yellow)}.t-ok{color:var(--ibm-green)}.t-err{color:#FF5F57}.t-prompt{color:#888}
+.t-pfbar{background:#3A3A5C;color:#fff;padding:2px 6px;border-radius:2px;display:inline-block;margin:4px 0;width:100%}
+.t-line{display:block;min-height:1.3em}
+.steps{counter-reset:step;list-style:none;display:flex;flex-direction:column;gap:1.2rem}
+.steps li{counter-increment:step;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:1rem 1.2rem 1rem 4rem;position:relative}
+.steps li::before{content:counter(step);position:absolute;left:1rem;top:1rem;width:28px;height:28px;border-radius:50%;background:var(--ibm-blue);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.85rem}
+.cmd-table{width:100%;border-collapse:collapse}
+.cmd-table th{background:var(--ibm-dark);color:#fff;padding:.6rem 1rem;text-align:left;font-size:.85rem}
+.cmd-table th:first-child{border-radius:8px 0 0 0}.cmd-table th:last-child{border-radius:0 8px 0 0}
+.cmd-table td{padding:.55rem 1rem;font-size:.88rem;border-bottom:1px solid var(--border)}
+.cmd-table tr:nth-child(even) td{background:#F7F7F7}.cmd-table tr:hover td{background:#EEF4FF}
+.cmd-table code{background:#1A1A2E;color:var(--term-fg);padding:1px 6px;border-radius:4px}
+.pf-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:.8rem}
+.pf-key{background:var(--ibm-dark);color:#fff;border-radius:8px;padding:.8rem 1rem;display:flex;flex-direction:column;gap:.3rem}
+.pf-label{background:var(--ibm-yellow);color:var(--ibm-dark);font-weight:700;font-size:.75rem;border-radius:4px;padding:1px 6px;align-self:flex-start}
+.pf-desc{font-size:.82rem;color:#C6C6C6}
+.info-box{border-radius:8px;padding:1rem 1.2rem;display:flex;gap:.8rem;align-items:flex-start;margin:1rem 0}
+.ib-icon{font-size:1.3rem;flex-shrink:0}
+.info-tip{background:#EEF4FF;border-left:4px solid var(--ibm-blue)}
+.info-warn{background:#FFF8E1;border-left:4px solid var(--ibm-yellow)}
+.arch{background:var(--ibm-dark);border-radius:12px;padding:2rem;color:#fff;font-family:'Cascadia Code','Consolas',monospace;font-size:.8rem;overflow-x:auto}
+.a-title{color:var(--term-yellow);font-size:1rem;margin-bottom:1rem;font-weight:bold}
+.a-box{border:1px solid #444;border-radius:6px;padding:.4rem .8rem;display:inline-block;margin:.2rem;white-space:nowrap}
+.a-core{border-color:#4589FF;color:#4589FF}.a-tm{border-color:#24A148;color:#24A148}
+.a-ds{border-color:#F1C21B;color:#F1C21B}.a-ui{border-color:#A56EFF;color:#A56EFF}
+.a-row{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.5rem}
+.a-label{color:#888;font-size:.72rem;margin-bottom:.3rem}
+details{background:var(--card);border:1px solid var(--border);border-radius:8px;margin-bottom:.7rem;overflow:hidden}
+summary{padding:.9rem 1.2rem;cursor:pointer;font-weight:600;font-size:.95rem;list-style:none;display:flex;align-items:center;gap:.6rem;user-select:none}
+summary::-webkit-details-marker{display:none}
+details[open] summary{background:#F0F5FF;color:var(--ibm-blue)}
+.details-body{padding:1rem 1.2rem;border-top:1px solid var(--border)}
+footer{background:var(--ibm-dark);color:#8D8D8D;text-align:center;padding:2rem;font-size:.85rem}
+footer a{color:#4589FF}
+@media(max-width:600px){nav a{display:none}h1{font-size:2rem}.pf-grid{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<nav>
+<a href="#" class="logo">IBM <span>z/OS</span> Simulator</a>
+<a href="#inicio">In&#237;cio</a>
+<a href="#datasets">Datasets</a>
+<a href="#ims">IMS DB</a>
+<a href="#pfkeys">PF Keys</a>
+<a href="#faq">FAQ</a>
+<span class="spacer"></span>
+<span class="badge">v2.0</span>
+</nav>
+<header class="hero" id="inicio">
+<div class="hero-content">
+<div class="hero-icon">&#128421;</div>
+<h1>IBM z/OS Mainframe Simulator</h1>
+<p class="sub">Aprenda conceitos reais de mainframe &#8212; IMS DB, VSAM, IDCAMS, JCL e z/OS &#8212; em qualquer computador, sem precisar de acesso a um mainframe real.</p>
+<div class="hero-btns">
+<a href="#quickstart" class="btn btn-primary">&#9889; In&#237;cio R&#225;pido</a>
+<a href="#datasets" class="btn btn-outline">&#128193; Gerenciar Datasets</a>
+<a href="#ims" class="btn btn-outline">&#128247; IMS DB</a>
+</div></div></header>
+<main><div class="container">
+<section>
+<div class="section-header"><div class="section-icon icon-blue">&#128161;</div><h2>O que &#233; este simulador?</h2></div>
+<p>Este simulador reproduz fielmente o comportamento de um <strong>IBM z/OS Mainframe</strong> &#8212; o tipo de computador que processa bilh&#245;es de transa&#231;&#245;es banc&#225;rias, a&#233;reas e governamentais todos os dias. Voc&#234; interage com uma interface <strong>TSO/ISPF</strong> no terminal, exatamente como faria em um mainframe de produ&#231;&#227;o.</p>
+<div class="cards">
+<div class="card"><div class="card-icon">&#128247;</div><h3>IMS DB</h3><p>Banco de dados hier&#225;rquico da IBM. Aprenda DL/I, DBDs, PSBs, PCBs e SSAs &#8212; a tecnologia por tr&#225;s de centenas de bancos e seguradoras.</p></div>
+<div class="card"><div class="card-icon">&#128193;</div><h3>z/OS Datasets</h3><p>PS (sequencial), PDS (particionado) e VSAM (KSDS, ESDS, RRDS). O jeito mainframe de armazenar dados.</p></div>
+<div class="card"><div class="card-icon">&#9881;</div><h3>IDCAMS</h3><p>Utilit&#225;rio z/OS para criar, listar, excluir e copiar datasets. Cria clusters VSAM, aloca PS/PDS, exibe cat&#225;logos.</p></div>
+<div class="card"><div class="card-icon">&#128187;</div><h3>ISPF Panels</h3><p>Interface TSO/ISPF com PF Keys funcionais (PF1=Help, PF3=End, PF7=Up, PF8=Down, PF12=Cancel), exatamente como no z/OS real.</p></div>
+<div class="card"><div class="card-icon">&#128225;</div><h3>IMS TM</h3><p>Transaction Manager: regi&#245;es MPP (online) e BMP (batch). Execute transa&#231;&#245;es online e programas em lote.</p></div>
+<div class="card"><div class="card-icon">&#127959;</div><h3>Address Spaces</h3><p>Modelo MVS de espa&#231;os de endere&#231;amento &#8212; monitore regi&#245;es IMS, DB2 e JES2 como um operador z/OS.</p></div>
+</div></section>
+<section id="quickstart">
+<div class="section-header"><div class="section-icon icon-green">&#9889;</div><h2>In&#237;cio R&#225;pido</h2></div>
+<p>Para come&#231;ar, compile e execute o simulador:</p>
+<div class="terminal">
+<div class="term-titlebar"><div class="term-dot dot-red"></div><div class="term-dot dot-yellow"></div><div class="term-dot dot-green"></div><span class="term-title">Terminal &#8212; c:\dev\IMS</span></div>
+<div class="term-body">
+<span class="t-line"><span class="t-dim">$</span> <span class="t-input">make</span>          <span class="t-dim"># compilar</span></span>
+<span class="t-line"><span class="t-dim">$</span> <span class="t-input">./ims.exe</span>     <span class="t-dim"># iniciar</span></span>
+<span class="t-line">&nbsp;</span>
+<span class="t-line t-header">&#9556;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9559;</span>
+<span class="t-line t-header">&#9553;    IBM z/OS MAINFRAME SIMULATOR  v2.0     &#9553;</span>
+<span class="t-line t-header">&#9562;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9565;</span>
+<span class="t-line">&nbsp;</span>
+<span class="t-line"><span class="t-cyan">  1.</span> <span class="t-white">IMS Database &amp; Transaction Manager</span></span>
+<span class="t-line"><span class="t-cyan">  2.</span> <span class="t-white">z/OS Dataset Manager (DFSMS)</span></span>
+<span class="t-line"><span class="t-cyan">  3.</span> <span class="t-white">z/OS Address Space Monitor</span></span>
+<span class="t-line"><span class="t-cyan">  Q.</span> <span class="t-white">Sair</span></span>
+<span class="t-line">&nbsp;</span>
+<span class="t-line"><span class="t-prompt">COMMAND ==&gt; </span><span class="t-input">2</span></span>
+</div></div>
+<ul class="steps">
+<li><strong>Compile:</strong> Abra o terminal na pasta <code>c:\dev\IMS</code> e execute <code>make</code>. Isso gera <code>ims.exe</code>.</li>
+<li><strong>Inicie:</strong> Execute <code>./ims.exe</code>. O menu principal aparece com as 3 &#225;reas.</li>
+<li><strong>Escolha:</strong> Digite <kbd>2</kbd> para Dataset Manager, <kbd>1</kbd> para IMS DB, ou <kbd>3</kbd> para Monitor.</li>
+<li><strong>Explore:</strong> Pressione <kbd>F1</kbd> para ajuda contextual, <kbd>F3</kbd> para voltar ao menu anterior.</li>
+</ul>
+</section>
+<section id="datasets">
+<div class="section-header"><div class="section-icon icon-yellow">&#128193;</div><h2>DFSMS &#8212; Gerenciador de Datasets</h2></div>
+<p>No mainframe, arquivos s&#227;o chamados de <strong>datasets</strong>. O DFSMS gerencia todos eles. Acesse digitando <kbd>2</kbd> no menu principal.</p>
+<div class="terminal"><div class="term-titlebar"><div class="term-dot dot-red"></div><div class="term-dot dot-yellow"></div><div class="term-dot dot-green"></div><span class="term-title">DFSMS DATASET MANAGER</span></div><div class="term-body">
+<span class="t-line"><span class="t-bold">DFSMS DATASET SERVICES</span>         Catalog entries: 5</span>
+<span class="t-line">&nbsp;</span>
+<span class="t-line"><span class="t-green">Quick Start:</span></span>
+<span class="t-line">   1. ALLOC MY.DATA PS RECFM(FB) LRECL(80)</span>
+<span class="t-line">   2. WRITE MY.DATA</span>
+<span class="t-line">   3. BROWSE MY.DATA</span>
+<span class="t-line">   4. DELETE MY.DATA</span>
+<span class="t-line"><span class="t-pfbar"> F1=Help  F3=End   F7=Up    F8=Down  F12=Cancel</span></span>
+<span class="t-line"><span class="t-prompt">COMMAND ==&gt; </span><span class="t-input">_</span></span>
+</div></div>
+<h3 style="margin-top:2rem">&#128203; Comandos do Dataset Manager</h3>
+<table class="cmd-table"><thead><tr><th>Comando</th><th>Exemplo</th><th>O que faz</th></tr></thead><tbody>
+<tr><td><code>ALLOC</code></td><td><code>ALLOC ALUNO.NOTAS PS RECFM(FB) LRECL(80)</code></td><td>Aloca dataset sequencial PS, registros fixos de 80 bytes</td></tr>
+<tr><td><code>ALLOC PDS</code></td><td><code>ALLOC PROJ.JCL PDS</code></td><td>Aloca dataset particionado (pasta com membros)</td></tr>
+<tr><td><code>WRITE</code></td><td><code>WRITE ALUNO.NOTAS</code></td><td>Modo interativo para digitar registros. Linha em branco ou PF3 encerra</td></tr>
+<tr><td><code>BROWSE</code></td><td><code>BROWSE ALUNO.NOTAS</code></td><td>Exibe registros com numera&#231;&#227;o (at&#233; 50 registros)</td></tr>
+<tr><td><code>DELETE</code></td><td><code>DELETE ALUNO.NOTAS</code></td><td>Remove o dataset do cat&#225;logo ICF</td></tr>
+<tr><td><code>LISTCAT</code></td><td><code>LISTCAT</code> / <code>LISTCAT DSN</code></td><td>Lista o cat&#225;logo completo ou um dataset espec&#237;fico</td></tr>
+<tr><td><code>DEFINE CLUSTER</code></td><td><code>DEFINE CLUSTER (NAME(X) INDEXED KEYS(8,0))</code></td><td>Cria cluster VSAM via IDCAMS</td></tr>
+</tbody></table>
+<h3 style="margin-top:2rem">&#128260; Exemplo Completo</h3>
+<div class="terminal"><div class="term-titlebar"><div class="term-dot dot-red"></div><div class="term-dot dot-yellow"></div><div class="term-dot dot-green"></div><span class="term-title">Criar, popular e visualizar dataset</span></div><div class="term-body">
+<span class="t-line t-dim">-- Passo 1: Alocar --</span>
+<span class="t-line"><span class="t-prompt">COMMAND ==&gt; </span><span class="t-input">ALLOC ESCOLA.ALUNOS PS RECFM(FB) LRECL(80)</span></span>
+<span class="t-line t-ok"> IEF285I ESCOLA.ALUNOS ALLOCATED</span>
+<span class="t-line t-ok"> IGD104I ESCOLA.ALUNOS DSORG=PS RECFM=FB LRECL=80 -- RC=0</span>
+<span class="t-line">&nbsp;</span>
+<span class="t-line t-dim">-- Passo 2: Escrever registros --</span>
+<span class="t-line"><span class="t-prompt">COMMAND ==&gt; </span><span class="t-input">WRITE ESCOLA.ALUNOS</span></span>
+<span class="t-line"> WRITE: ESCOLA.ALUNOS  RECFM=FB  LRECL=80</span>
+<span class="t-line"> Enter records (blank line or PF3 to stop):</span>
+<span class="t-line"><span class="t-prompt"> +0001&gt; </span><span class="t-input">001 JOAO SILVA        MATEMATICA  9.5</span></span>
+<span class="t-line"><span class="t-prompt"> +0002&gt; </span><span class="t-input">002 MARIA SANTOS      PORTUGUES   8.7</span></span>
+<span class="t-line t-ok"> IEF285I ESCOLA.ALUNOS: 2 RECORD(S) WRITTEN</span>
+<span class="t-line">&nbsp;</span>
+<span class="t-line t-dim">-- Passo 3: Visualizar --</span>
+<span class="t-line"><span class="t-prompt">COMMAND ==&gt; </span><span class="t-input">BROWSE ESCOLA.ALUNOS</span></span>
+<span class="t-line t-white"> 0001  001 JOAO SILVA        MATEMATICA  9.5</span>
+<span class="t-line t-white"> 0002  002 MARIA SANTOS      PORTUGUES   8.7</span>
+</div></div>
+<h3 style="margin-top:2rem">&#128230; Tipos de Dataset z/OS</h3>
+<div class="cards">
+<div class="card"><div class="card-icon">&#128196;</div><h3>PS &#8212; Physical Sequential</h3><p>Arquivo sequencial. Lido do in&#237;cio ao fim. Equivale a arquivo Unix. <code>ALLOC DSN PS</code></p></div>
+<div class="card"><div class="card-icon">&#128194;</div><h3>PDS &#8212; Partitioned</h3><p>Cole&#231;&#227;o de membros. Como diret&#243;rio. Usado para JCL, COBOL, load modules. <code>ALLOC DSN PDS</code></p></div>
+<div class="card"><div class="card-icon">&#128273;</div><h3>VSAM KSDS</h3><p>Key-Sequenced. Acesso direto por chave. O mais comum &#8212; como &#237;ndice de BD. <code>DEFINE CLUSTER</code></p></div>
+<div class="card"><div class="card-icon">&#128203;</div><h3>VSAM ESDS</h3><p>Entry-Sequenced. Sem chave, acesso pela posi&#231;&#227;o RBA. Bom para logs.</p></div>
+<div class="card"><div class="card-icon">&#128290;</div><h3>VSAM RRDS</h3><p>Relative Record. Acesso por n&#250;mero de slot. Para tabelas de tamanho fixo.</p></div>
+<div class="card"><div class="card-icon">&#128218;</div><h3>GDG &#8212; Generation Data Group</h3><p>Fam&#237;lia versionada: MY.DATA(0)=atual, MY.DATA(-1)=anterior. Backups rotativos.</p></div>
+</div>
+<div class="info-box info-tip" style="margin-top:1.5rem"><span class="ib-icon">&#128161;</span><div><strong>Nomenclatura:</strong> Qualificadores separados por ponto: <code>DEPT.APP.TIPO</code>. M&#225;x 44 chars total, at&#233; 8 chars por qualificador. Sempre mai&#250;sculas.</div></div>
+</section>
+<section id="ims">
+<div class="section-header"><div class="section-icon icon-purple">&#128247;</div><h2>IMS DB &#8212; Banco de Dados Hier&#225;rquico</h2></div>
+<p>O <strong>IMS</strong> (Information Management System) da IBM usa um modelo <strong>hier&#225;rquico</strong> &#8212; como uma &#225;rvore. Dados s&#227;o organizados em segmentos pai-filho. Exemplo: HOSPITAL &#8594; PACIENTE &#8594; DIAGN&#211;STICO.</p>
+<div class="arch"><div class="a-title">&#127795; Hierarquia IMS &#8212; Banco HOSPITAL</div>
+<pre style="color:#E0E0E0;font-size:.8rem;line-height:1.8">
+  <span style="color:#F1C21B">HOSPITAL</span>  (DBD: HOSPITL)
+  &#9474;
+  &#9500;&#9472;&#9472; <span style="color:#4589FF">PACIENTE</span>  (key: PATNUMBR)
+  &#9474;       &#9500;&#9472;&#9472; <span style="color:#24A148">DIAGNOSE</span>
+  &#9474;       &#9492;&#9472;&#9472; <span style="color:#24A148">TREATMNT</span>
+  &#9492;&#9472;&#9472; <span style="color:#A56EFF">DOCTOR</span>    (key: DOCNUMBR)
+          &#9492;&#9472;&#9472; <span style="color:#FF8A80">PATIENT (l&#243;gico)</span>
+</pre></div>
+<h3 style="margin-top:2rem">&#128272; Conceitos Fundamentais</h3>
+<div class="cards">
+<div class="card"><div class="card-icon">&#128208;</div><h3>DBD &#8212; Database Definition</h3><p>Define o esquema: segmentos, campos, tamanhos e rela&#231;&#245;es hier&#225;rquicas pai/filho.</p></div>
+<div class="card"><div class="card-icon">&#128274;</div><h3>PSB &#8212; Program Spec Block</h3><p>Define a vis&#227;o do programa sobre os bancos. Cont&#233;m um ou mais PCBs. Cada programa tem seu PSB.</p></div>
+<div class="card"><div class="card-icon">&#128225;</div><h3>PCB &#8212; Program Comm Block</h3><p>Regras de acesso de um programa a um DBD. Status code &#233; retornado aqui ap&#243;s cada DL/I call.</p></div>
+<div class="card"><div class="card-icon">&#128269;</div><h3>SSA &#8212; Segment Search Argument</h3><p>Filtro de busca: <code>PACIENTE(PATNUMBR=12345)</code>. Navega a hierarquia e qualifica registros.</p></div>
+</div>
+<h3 style="margin-top:2rem">&#128222; Chamadas DL/I</h3>
+<table class="cmd-table"><thead><tr><th>Fun&#231;&#227;o</th><th>C&#243;digo</th><th>O que faz</th></tr></thead><tbody>
+<tr><td><code>GU</code></td><td>Get Unique</td><td>Busca um segmento &#250;nico por chave. Como <code>SELECT WHERE key=?</code></td></tr>
+<tr><td><code>GN</code></td><td>Get Next</td><td>Pr&#243;ximo segmento na seq&#252;&#234;ncia hier&#225;rquica. Como um cursor</td></tr>
+<tr><td><code>GNP</code></td><td>Get Next in Parent</td><td>Pr&#243;ximo segmento filho do pai atual</td></tr>
+<tr><td><code>GHU</code></td><td>Get Hold Unique</td><td>Busca com lock para atualiza&#231;&#227;o posterior (REPL ou DLET)</td></tr>
+<tr><td><code>ISRT</code></td><td>Insert</td><td>Insere um novo segmento na hierarquia</td></tr>
+<tr><td><code>DLET</code></td><td>Delete</td><td>Remove o segmento em hold (ap&#243;s GHU/GHN)</td></tr>
+<tr><td><code>REPL</code></td><td>Replace</td><td>Atualiza o segmento em hold com novo conte&#250;do</td></tr>
+</tbody></table>
+<h3 style="margin-top:2rem">&#128202; Status Codes IMS</h3>
+<table class="cmd-table"><thead><tr><th>Code</th><th>Significado</th><th>O que fazer</th></tr></thead><tbody>
+<tr><td><code style="color:var(--ibm-green)">&#160;&#160;</code></td><td>Blanks &#8212; OK</td><td>Chamada bem-sucedida. Continue o processamento</td></tr>
+<tr><td><code>GE</code></td><td>Segment not found</td><td>Registro n&#227;o existe. Verifique a chave ou SSA</td></tr>
+<tr><td><code>GB</code></td><td>End of database</td><td>GN atingiu o fim &#8212; normal para leitura sequencial</td></tr>
+<tr><td><code>II</code></td><td>Duplicate key</td><td>Chave duplicada no ISRT</td></tr>
+<tr><td><code>DJ</code></td><td>No hold</td><td>DLET/REPL sem GHU/GHN pr&#233;vio</td></tr>
+</tbody></table>
+<div class="terminal" style="margin-top:1.5rem"><div class="term-titlebar"><div class="term-dot dot-red"></div><div class="term-dot dot-yellow"></div><div class="term-dot dot-green"></div><span class="term-title">IMS DB &#8212; Modo Demo</span></div><div class="term-body">
+<span class="t-line"><span class="t-prompt">IMS ==&gt; </span><span class="t-input">GU HOSPITAL</span></span>
+<span class="t-line t-ok">  STATUS: [  ]  (OK)</span>
+<span class="t-line t-white">  HOSPNAME=MEMORIAL HOSPITAL         HOSPCODE=01</span>
+<span class="t-line">&nbsp;</span>
+<span class="t-line"><span class="t-prompt">IMS ==&gt; </span><span class="t-input">GU PACIENTE (PATNUMBR=00000001)</span></span>
+<span class="t-line t-ok">  STATUS: [  ]  (OK)</span>
+<span class="t-line t-white">  PATNUMBR=00000001  PATNAME=JOAO SILVA     BEDIDENT=101-A</span>
+<span class="t-line">&nbsp;</span>
+<span class="t-line"><span class="t-prompt">IMS ==&gt; </span><span class="t-input">GU PACIENTE (PATNUMBR=99999999)</span></span>
+<span class="t-line t-err">  STATUS: [GE]  (Segment Not Found)</span>
+</div></div>
+</section>
+<section id="pfkeys">
+<div class="section-header"><div class="section-icon icon-teal">&#9000;</div><h2>ISPF PF Keys &#8212; Teclas de Fun&#231;&#227;o</h2></div>
+<p>No mainframe real, terminais 3270 possuem 24 teclas de fun&#231;&#227;o program&#225;veis. O simulador mapeia suas teclas F1-F12 para o comportamento ISPF padr&#227;o:</p>
+<div class="pf-grid">
+<div class="pf-key"><span class="pf-label">PF1 / F1</span><span class="pf-desc">HELP &#8212; Ajuda contextual da tela atual</span></div>
+<div class="pf-key"><span class="pf-label">PF3 / F3</span><span class="pf-desc">END &#8212; Volta ao menu/tela anterior</span></div>
+<div class="pf-key"><span class="pf-label">PF7 / F7</span><span class="pf-desc">UP &#8212; Rolagem para cima</span></div>
+<div class="pf-key"><span class="pf-label">PF8 / F8</span><span class="pf-desc">DOWN &#8212; Rolagem para baixo</span></div>
+<div class="pf-key"><span class="pf-label">PF12 / F12</span><span class="pf-desc">CANCEL &#8212; Cancela opera&#231;&#227;o em andamento</span></div>
+<div class="pf-key" style="border:1px dashed #555"><span class="pf-label" style="background:#555">PF2&#8211;PF6</span><span class="pf-desc" style="color:#555">Reservadas para vers&#245;es futuras</span></div>
+</div>
+<div class="info-box info-tip" style="margin-top:1.5rem"><span class="ib-icon">&#128161;</span><div><strong>PF Bar:</strong> A barra de PF keys aparece no rodapé de todas as telas em v&#237;deo reverso, mostrando as fun&#231;&#245;es dispon&#237;veis &#8212; exatamente como no ISPF real.</div></div>
+<div class="info-box info-warn"><span class="ib-icon">&#9888;</span><div><strong>Windows:</strong> Se F1-F12 n&#227;o funcionarem, use os comandos equivalentes: <code>END</code> (=PF3), <code>Q</code> (sair). PF keys funcionam no Windows Terminal, Git Bash e WSL.</div></div>
+</section>
+<section id="arquitetura">
+<div class="section-header"><div class="section-icon icon-red">&#127959;</div><h2>Arquitetura do Simulador</h2></div>
+<p>O simulador &#233; escrito em C99 e organizado em subsistemas que espelham a estrutura real do z/OS:</p>
+<div class="arch"><div class="a-title">&#127963; Subsistemas do IBM z/OS Simulator</div>
+<div class="a-label">Interface do Usu&#225;rio</div>
+<div class="a-row"><span class="a-box a-ui">terminal.c</span><span class="a-box a-ui">TSO/ISPF panels</span><span class="a-box a-ui">PF key detection</span></div>
+<div style="color:#555;text-align:center;margin:.4rem 0">&#8597;</div>
+<div class="a-label">N&#250;cleo IMS (Core)</div>
+<div class="a-row"><span class="a-box a-core">ims_system.c</span><span class="a-box a-core">database.c</span><span class="a-box a-core">dli_calls.c</span><span class="a-box a-core">ssa_parser.c</span></div>
+<div style="color:#555;text-align:center;margin:.4rem 0">&#8597;</div>
+<div class="a-label">Transaction Manager (TM)</div>
+<div class="a-row"><span class="a-box a-tm">mpp.c (online MPP)</span><span class="a-box a-tm">bmp.c (batch BMP)</span><span class="a-box a-tm">msgqueue.c</span></div>
+<div style="color:#555;text-align:center;margin:.4rem 0">&#8597;</div>
+<div class="a-label">DFSMS / Datasets</div>
+<div class="a-row"><span class="a-box a-ds">ps.c</span><span class="a-box a-ds">pds.c</span><span class="a-box a-ds">vsam.c</span><span class="a-box a-ds">gdg.c</span><span class="a-box a-ds">idcams.c</span><span class="a-box a-ds">catalog.c</span></div>
+<div style="color:#555;text-align:center;margin:.4rem 0">&#8597;</div>
+<div class="a-label">z/OS Systems</div>
+<div class="a-row"><span class="a-box" style="border-color:#FF8A80;color:#FF8A80">address_space.c</span><span class="a-box" style="border-color:#FF8A80;color:#FF8A80">svc.c</span><span class="a-box" style="border-color:#FF8A80;color:#FF8A80">console.c</span><span class="a-box" style="border-color:#FF8A80;color:#FF8A80">as_monitor.c</span></div>
+</div>
+</section>
+<section id="glossario">
+<div class="section-header"><div class="section-icon icon-green">&#128218;</div><h2>Gloss&#225;rio Mainframe</h2></div>
+<details><summary>&#128247; IMS &#8212; Information Management System</summary><div class="details-body"><p>Sistema de gerenciamento de banco de dados hier&#225;rquico da IBM, lan&#231;ado em 1968. Ainda processa trilh&#245;es de transa&#231;&#245;es di&#225;rias em bancos e companhias a&#233;reas. Usa modelo <strong>hier&#225;rquico</strong> (&#225;rvore pai-filho), diferente do modelo relacional SQL.</p></div></details>
+<details><summary>&#128208; DBD &#8212; Database Definition</summary><div class="details-body"><p>Define a estrutura f&#237;sica do banco IMS: segmentos, campos (nome/tipo/tamanho), hierarquia e tipos de acesso. &#201; o equivalente ao <code>CREATE TABLE</code> do SQL.</p></div></details>
+<details><summary>&#128274; PSB / PCB</summary><div class="details-body"><p>O <strong>PSB</strong> &#233; a vis&#227;o do programa sobre os bancos &#8212; define quais bancos pode acessar. Cont&#233;m um ou mais <strong>PCBs</strong>. O PCB define regras de acesso e &#233; onde o IMS retorna o status code ap&#243;s cada DL/I call.</p></div></details>
+<details><summary>&#128222; DL/I &#8212; Data Language/I</summary><div class="details-body"><p>Interface de chamada do IMS. COBOL chama: <code>CALL 'CBLTDLI' USING function pcb io-area ssa</code>. Fun&#231;&#245;es: GU, GN, GNP, GHU (leitura), ISRT (inser&#231;&#227;o), DLET (exclus&#227;o), REPL (atualiza&#231;&#227;o).</p></div></details>
+<details><summary>&#128269; SSA &#8212; Segment Search Argument</summary><div class="details-body"><p>Filtro de busca DL/I. Formato: <code>SEGNAME (CAMPO OP VALOR)</code>. Exemplo: <code>PACIENTE(PATNUMBR =00000001)</code>. Operadores: =, &lt;, &gt;, &lt;=, &gt;=. Pode ser n&#227;o-qualificado (s&#243; nome) ou qualificado (com crit&#233;rio).</p></div></details>
+<details><summary>&#128193; VSAM &#8212; Virtual Storage Access Method</summary><div class="details-body"><p>M&#233;todo de acesso z/OS para datasets de alto desempenho. Tipos: <strong>KSDS</strong> (por chave), <strong>ESDS</strong> (sequencial por posi&#231;&#227;o), <strong>RRDS</strong> (por n&#250;mero de slot). Criados com <code>IDCAMS DEFINE CLUSTER</code>.</p></div></details>
+<details><summary>&#9881; IDCAMS &#8212; Integrated Data Catalog Access Method Services</summary><div class="details-body"><p>Utilit&#225;rio z/OS para gerenciar datasets e cat&#225;logos ICF. Comandos: <code>DEFINE CLUSTER</code>, <code>DELETE</code>, <code>LISTCAT</code>, <code>REPRO</code>, <code>PRINT</code>, <code>ALLOCATE</code>.</p></div></details>
+<details><summary>&#128225; MPP / BMP &#8212; Regi&#245;es IMS</summary><div class="details-body"><p><strong>MPP</strong>: regi&#227;o online. Processa transa&#231;&#245;es em tempo real. Ativado por mensagem de terminal. <strong>BMP</strong>: regi&#227;o batch. Mistura acesso a IMS DB com processamento batch &#8212; pode ler mensagens da fila ou processar arquivos.</p></div></details>
+<details><summary>&#128187; TSO/ISPF</summary><div class="details-body"><p><strong>TSO</strong> (Time Sharing Option): shell interativo do z/OS. <strong>ISPF</strong> (Interactive System Productivity Facility): interface de menus sobre o TSO. O simulador reproduz a apar&#234;ncia e comportamento do ISPF, incluindo PF keys e a linha <code>COMMAND ===&gt;</code>.</p></div></details>
+</section>
+<section id="faq">
+<div class="section-header"><div class="section-icon icon-yellow">&#10067;</div><h2>Perguntas Frequentes</h2></div>
+<details><summary>&#128296; Como compilar no Windows?</summary><div class="details-body"><p>Instale o <strong>MinGW-w64</strong> (GCC para Windows) &#8212; recomendamos o <a href="https://www.w64devkit.com" target="_blank">w64devkit</a>. Extraia e adicione ao PATH. Depois execute <code>make</code> na pasta <code>c:\dev\IMS</code>.</p></div></details>
+<details><summary>&#128193; Onde os datasets ficam armazenados?</summary><div class="details-body"><p>Os datasets s&#227;o mantidos em mem&#243;ria durante a sess&#227;o. O cat&#225;logo ICF &#233; inicializado a cada execu&#231;&#227;o. Em vers&#227;o futura, os datasets ser&#227;o persistidos em arquivos locais entre sess&#245;es.</p></div></details>
+<details><summary>&#9000; As PF Keys n&#227;o funcionam no meu terminal</summary><div class="details-body"><p>O simulador detecta teclas F1-F12 via sequ&#234;ncias de escape ANSI. Se n&#227;o funcionar, use: <code>END</code> (=PF3), <code>Q</code> (sair). O Windows Terminal e Git Bash normalmente funcionam bem.</p></div></details>
+<details><summary>&#128247; Como carregar o banco HOSPITAL?</summary><div class="details-body"><p>Execute <code>make demo</code>. Isso inicia o simulador com o banco HOSPITAL pr&#233;-carregado e executa uma sequ&#234;ncia de DL/I calls demonstrando os segmentos PACIENTE, DOCTOR, DIAGNOSE etc.</p></div></details>
+<details><summary>&#128202; Como ver os status codes IMS?</summary><div class="details-body"><p>Ap&#243;s cada DL/I call, o PCB retorna um status code de 2 caracteres. Brancos = sucesso. Os mais comuns: <code>GE</code> (n&#227;o encontrado), <code>GB</code> (fim do banco), <code>II</code> (chave duplicada).</p></div></details>
+<details><summary>&#128640; Quais recursos est&#227;o planejados?</summary><div class="details-body"><p>Roadmap: <strong>DB2</strong> (SQL embarcado, SQLCA, cursores), <strong>COBOL Runtime</strong> (interpretador com CBLTDLI), <strong>JCL Interpreter</strong> (submiss&#227;o de jobs, JES2), e persist&#234;ncia de datasets entre sess&#245;es.</p></div></details>
+</section>
+</div></main>
+<footer>
+<p style="font-size:1rem;color:#C6C6C6;margin-bottom:.5rem">IBM z/OS Mainframe Simulator</p>
+<p>Projeto educacional &#8212; simula comportamento IBM z/OS para fins de aprendizado.</p>
+<p style="margin-top:.5rem"><a href="https://www.ibm.com/docs/en/ims/15.6.0" target="_blank">IBM IMS 15.6 Docs</a> &#183; <a href="https://www.ibm.com/docs/en/zos" target="_blank">IBM z/OS Docs</a> &#183; <a href="https://github.com/mondragonsi/Mainframe-Simulator" target="_blank">GitHub</a></p>
+</footer>
+</body>
+</html>
