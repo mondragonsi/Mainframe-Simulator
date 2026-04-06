@@ -10,7 +10,7 @@
   --ibm-blue:#0043CE; --ibm-dark:#001141; --ibm-green:#24A148;
   --ibm-yellow:#F1C21B; --ibm-red:#DA1E28;
   --bg:#F4F4F4; --card:#FFF; --border:#E0E0E0; --text:#161616;
-  --term-bg:#1A1A2E; --term-fg:#00FF41; --term-cyan:#4DD0E1;
+  --term-bg:#111827; --term-fg:#00FF41; --term-cyan:#4DD0E1;
 }
 html{scroll-behavior:smooth}
 body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.6}
@@ -46,7 +46,7 @@ main{padding:3rem 0 5rem}
 section{margin-bottom:4rem}
 .section-header{display:flex;align-items:center;gap:.8rem;margin-bottom:1.5rem;padding-bottom:.8rem;border-bottom:3px solid var(--ibm-blue)}
 .section-icon{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0}
-.icon-blue{background:#EEF4FF}.icon-green{background:#DEFBE6}.icon-yellow{background:#FFF8E1}.icon-purple{background:#F6F2FF}.icon-red{background:#FFF1F1}.icon-teal{background:#E5F6FB}
+.icon-blue{background:#EEF4FF}.icon-green{background:#DEFBE6}.icon-yellow{background:#FFF8E1}.icon-purple{background:#E5F6FB}.icon-red{background:#FFF1F1}.icon-teal{background:#E5F6FB}
 .cards{display:grid;gap:1.2rem;grid-template-columns:repeat(auto-fill,minmax(260px,1fr))}
 .card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1.4rem;box-shadow:0 1px 4px rgba(0,0,0,.06);transition:box-shadow .2s,transform .2s}
 .card:hover{box-shadow:0 4px 16px rgba(0,67,206,.12);transform:translateY(-2px)}
@@ -60,7 +60,7 @@ section{margin-bottom:4rem}
 .t-header{color:var(--term-yellow);font-weight:bold}.t-cyan{color:var(--term-cyan)}.t-green{color:var(--term-fg)}
 .t-dim{color:#6C6C6C}.t-white{color:#E0E0E0}.t-bold{color:#fff;font-weight:bold}
 .t-input{color:var(--term-yellow)}.t-ok{color:var(--ibm-green)}.t-err{color:#FF5F57}.t-prompt{color:#888}
-.t-pfbar{background:#3A3A5C;color:#fff;padding:2px 6px;border-radius:2px;display:inline-block;margin:4px 0;width:100%}
+.t-pfbar{background:#0A3D5C;color:#fff;padding:2px 6px;border-radius:2px;display:inline-block;margin:4px 0;width:100%}
 .t-line{display:block;min-height:1.3em}
 .steps{counter-reset:step;list-style:none;display:flex;flex-direction:column;gap:1.2rem}
 .steps li{counter-increment:step;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:1rem 1.2rem 1rem 4rem;position:relative}
@@ -70,7 +70,7 @@ section{margin-bottom:4rem}
 .cmd-table th:first-child{border-radius:8px 0 0 0}.cmd-table th:last-child{border-radius:0 8px 0 0}
 .cmd-table td{padding:.55rem 1rem;font-size:.88rem;border-bottom:1px solid var(--border)}
 .cmd-table tr:nth-child(even) td{background:#F7F7F7}.cmd-table tr:hover td{background:#EEF4FF}
-.cmd-table code{background:#1A1A2E;color:var(--term-fg);padding:1px 6px;border-radius:4px}
+.cmd-table code{background:#111827;color:var(--term-fg);padding:1px 6px;border-radius:4px}
 .pf-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:.8rem}
 .pf-key{background:var(--ibm-dark);color:#fff;border-radius:8px;padding:.8rem 1rem;display:flex;flex-direction:column;gap:.3rem}
 .pf-label{background:var(--ibm-yellow);color:var(--ibm-dark);font-weight:700;font-size:.75rem;border-radius:4px;padding:1px 6px;align-self:flex-start}
@@ -83,7 +83,7 @@ section{margin-bottom:4rem}
 .a-title{color:var(--term-yellow);font-size:1rem;margin-bottom:1rem;font-weight:bold}
 .a-box{border:1px solid #444;border-radius:6px;padding:.4rem .8rem;display:inline-block;margin:.2rem;white-space:nowrap}
 .a-core{border-color:#4589FF;color:#4589FF}.a-tm{border-color:#24A148;color:#24A148}
-.a-ds{border-color:#F1C21B;color:#F1C21B}.a-ui{border-color:#A56EFF;color:#A56EFF}
+.a-ds{border-color:#F1C21B;color:#F1C21B}.a-ui{border-color:#08BDBA;color:#08BDBA}
 .a-row{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.5rem}
 .a-label{color:#888;font-size:.72rem;margin-bottom:.3rem}
 details{background:var(--card);border:1px solid var(--border);border-radius:8px;margin-bottom:.7rem;overflow:hidden}
@@ -162,7 +162,7 @@ footer a{color:#4589FF}
 <p>O comando <kbd>/DS</kbd> agora abre o menu completo de utilidades ISPF (op&#231;&#227;o 3 do ISPF real), id&#234;ntico ao IBM z/OS de produ&#231;&#227;o. Em vez de um prompt de linha de comando, voc&#234; navega por pain&#233;is gr&#225;ficos exatamente como um operador mainframe faria.</p>
 <div class="info-box" style="background:#EEF4FF;border-left:4px solid var(--ibm-blue);border-radius:8px;padding:1rem 1.2rem;display:flex;gap:.8rem;margin-bottom:1.5rem"><span style="font-size:1.3rem">&#128247;</span><div><strong>O que mudou:</strong> O simulador passou a oferecer <strong>navega&#231;&#227;o por pain&#233;is ISPF</strong> &#8212; a mesma hierarquia de menus que profissionais mainframe utilizam diariamente, em vez de comandos isolados.</div></div>
 <h3>&#128681; Hierarquia de Navega&#231;&#227;o</h3>
-<div class="arch" style="margin-bottom:1.5rem"><div class="a-title">Fluxo de Pain&#233;is ISPF &#8212; Comando /DS</div><pre style="color:#E0E0E0;font-size:.8rem;line-height:2">  <span style="color:#F1C21B">/DS</span>  &#9658;&#9658;  <span style="color:#A56EFF">ISRUTIL &#8212; ISPF/PDF Utilities</span>  (op&#231;&#227;o 3)
+<div class="arch" style="margin-bottom:1.5rem"><div class="a-title">Fluxo de Pain&#233;is ISPF &#8212; Comando /DS</div><pre style="color:#E0E0E0;font-size:.8rem;line-height:2">  <span style="color:#F1C21B">/DS</span>  &#9658;&#9658;  <span style="color:#08BDBA">ISRUTIL &#8212; ISPF/PDF Utilities</span>  (op&#231;&#227;o 3)
               &#9474;
               &#9500;&#9472;&#9472; <span style="color:#4589FF">1 Library</span>    &#9658;  ISRMLM &#8212; Member List
               &#9474;                     &#9500;&#9472;&#9472; B Browse membro
@@ -204,7 +204,7 @@ footer a{color:#4589FF}
 <table class="cmd-table"><thead><tr><th>Recurso</th><th>No Simulador</th><th>IBM z/OS Real</th></tr></thead><tbody><tr><td>Menu de entrada</td><td><code>/DS</code> &#8594; ISRUTIL</td><td>ISPF Op&#231;&#227;o 3</td></tr><tr><td>Painel de datasets</td><td>ISRDUTIL (A/D/S/I)</td><td>ISPF 3.2</td></tr><tr><td>Formul&#225;rio de aloca&#231;&#227;o</td><td>ISRACDA (todos os campos)</td><td>ISPF 3.2 A</td></tr><tr><td>Lista de datasets</td><td>ISRDSAB + ISRDSLIST</td><td>ISPF 3.4</td></tr><tr><td>Lista de membros PDS</td><td>ISRMLM com B/E/D/R</td><td>ISPF 3.1</td></tr><tr><td>Browse de membro</td><td>ISRBRO (somente leitura)</td><td>ISPF Browse</td></tr><tr><td>Edit de membro</td><td>ISREDIT + STOW R</td><td>ISPF Edit</td></tr><tr><td>PF Keys</td><td>PF1/PF3/PF7/PF8/PF12</td><td>PF1/PF3/PF7/PF8/PF12</td></tr><tr><td>Identificadores de painel</td><td>ISRUTIL, ISRDUTIL&#8230;</td><td>Id&#234;nticos (ISRUTIL, ISRDUTIL&#8230;)</td></tr></tbody></table>
 <div class="info-box" style="background:#DEFBE6;border-left:4px solid #24A148;border-radius:8px;padding:1rem 1.2rem;display:flex;gap:.8rem;margin-top:1rem"><span style="font-size:1.3rem">&#9989;</span><div><strong>Fidelidade total:</strong> Os identificadores de painel (ISRUTIL, ISRDUTIL, ISRACDA&#8230;), os nomes das op&#231;&#245;es e o comportamento das PF Keys s&#227;o id&#234;nticos aos do IBM z/OS real. Um estudante que aprender neste simulador reconhecer&#225; imediatamente o ambiente em um mainframe de produ&#231;&#227;o.</div></div>
 <h3 style="margin-top:2rem">&#128272; Refer&#234;ncia de PF Keys nos Pain&#233;is ISPF</h3>
-<div class="pf-grid"><div class="pf-key"><span class="pf-label">PF1 / F1</span><span class="pf-desc">HELP &#8212; Ajuda contextual do painel atual</span></div><div class="pf-key"><span class="pf-label">PF3 / F3</span><span class="pf-desc">END &#8212; Volta ao painel anterior / STOW no Edit</span></div><div class="pf-key"><span class="pf-label">PF7 / F7</span><span class="pf-desc">UP &#8212; Rola lista para cima (ISRDSLIST, ISRMLM)</span></div><div class="pf-key"><span class="pf-label">PF8 / F8</span><span class="pf-desc">DOWN &#8212; Rola lista para baixo</span></div><div class="pf-key"><span class="pf-label">PF12 / F12</span><span class="pf-desc">CANCEL &#8212; Cancela sem salvar</span></div><div class="pf-key" style="border:1px dashed #555"><span class="pf-label" style="background:#555">Tab</span><span class="pf-desc" style="color:#555">Navega entre campos no formul&#225;rio ISRACDA</span></div></div>
+<div class="pf-grid"><div class="pf-key"><span class="pf-label">PF1 / F1</span><span class="pf-desc">HELP &#8212; Ajuda contextual do painel atual</span></div><div class="pf-key"><span class="pf-label">PF3 / F3</span><span class="pf-desc">END &#8212; Volta ao painel anterior / STOW no Edit</span></div><div class="pf-key"><span class="pf-label">PF7 / F7</span><span class="pf-desc">UP &#8212; Rola lista para cima (ISRDSLIST, ISRMLM)</span></div><div class="pf-key"><span class="pf-label">PF8 / F8</span><span class="pf-desc">DOWN &#8212; Rola lista para baixo</span></div><div class="pf-key"><span class="pf-label">PF12 / F12</span><span class="pf-desc">CANCEL &#8212; Cancela sem salvar</span></div><div class="pf-key" style="border:1px dashed var(--ibm-blue)"><span class="pf-label" style="background:var(--ibm-blue)">Tab</span><span class="pf-desc">Navega entre campos no formul&#225;rio ISRACDA</span></div></div>
 <h3 style="margin-top:2rem">&#128260; Exemplo Passo a Passo: Criar PDS, Editar Membro e Navegar</h3>
 <ul class="steps"><li><strong>Abrir ISPF Utilities:</strong> No prompt principal, digite <kbd>/DS</kbd> e pressione <kbd>Enter</kbd>. O painel <strong>ISRUTIL</strong> ser&#225; exibido.</li><li><strong>Ir para Data Set Utility:</strong> Digite <kbd>2</kbd> em <em>Option ===&gt;</em>. O painel <strong>ISRDUTIL</strong> abre. Digite o nome desejado no campo <em>Data Set Name</em>, ex: <code>MINHA.FONTE</code>.</li><li><strong>Alocar o PDS:</strong> Digite <kbd>A</kbd> em <em>Option ===&gt;</em>. O formul&#225;rio <strong>ISRACDA</strong> abre com os par&#226;metros pr&#233;-preenchidos. Confirme o tipo <code>PDS</code> e pressione <kbd>Enter</kbd> para alocar.</li><li><strong>Abrir Dslist:</strong> Pressione <kbd>PF3</kbd> para voltar ao ISRUTIL, depois digite <kbd>4</kbd>. No painel <strong>ISRDSAB</strong>, insira <code>MINHA.*</code> em <em>Dsname Level</em> e pressione <kbd>Enter</kbd>.</li><li><strong>Ver membros do PDS:</strong> Na lista <strong>ISRDSLIST</strong>, coloque <kbd>M</kbd> na coluna <em>Cmd</em> ao lado de <code>MINHA.FONTE</code>. O painel <strong>ISRMLM</strong> exibe os membros.</li><li><strong>Editar um membro:</strong> No ISRMLM, coloque <kbd>E</kbd> ao lado de um membro. O painel <strong>ISREDIT</strong> abre. Digite o conte&#250;do e pressione <kbd>PF3</kbd> para salvar (STOW R).</li><li><strong>Browse do membro:</strong> De volta ao ISRMLM, coloque <kbd>B</kbd> ao lado do membro. O painel <strong>ISRBRO</strong> exibe o conte&#250;do com numera&#231;&#227;o de linhas. Pressione <kbd>PF3</kbd> para fechar.</li></ul>
 </section>
@@ -332,7 +332,7 @@ footer a{color:#4589FF}
   &#9500;&#9472;&#9472; <span style="color:#4589FF">PACIENTE</span>  (key: PATNUMBR)
   &#9474;       &#9500;&#9472;&#9472; <span style="color:#24A148">DIAGNOSE</span>
   &#9474;       &#9492;&#9472;&#9472; <span style="color:#24A148">TREATMNT</span>
-  &#9492;&#9472;&#9472; <span style="color:#A56EFF">DOCTOR</span>    (key: DOCNUMBR)
+  &#9492;&#9472;&#9472; <span style="color:#08BDBA">DOCTOR</span>    (key: DOCNUMBR)
           &#9492;&#9472;&#9472; <span style="color:#FF8A80">PATIENT (l&#243;gico)</span>
 </pre></div>
 <h3 style="margin-top:2rem">&#128272; Conceitos Fundamentais</h3>
@@ -382,7 +382,7 @@ footer a{color:#4589FF}
 <div class="pf-key"><span class="pf-label">PF7 / F7</span><span class="pf-desc">UP &#8212; Rolagem para cima</span></div>
 <div class="pf-key"><span class="pf-label">PF8 / F8</span><span class="pf-desc">DOWN &#8212; Rolagem para baixo</span></div>
 <div class="pf-key"><span class="pf-label">PF12 / F12</span><span class="pf-desc">CANCEL &#8212; Cancela opera&#231;&#227;o em andamento</span></div>
-<div class="pf-key" style="border:1px dashed #555"><span class="pf-label" style="background:#555">PF2&#8211;PF6</span><span class="pf-desc" style="color:#555">Reservadas para vers&#245;es futuras</span></div>
+<div class="pf-key" style="border:1px dashed var(--ibm-blue)"><span class="pf-label" style="background:#555">PF2&#8211;PF6</span><span class="pf-desc" style="color:#555">Reservadas para vers&#245;es futuras</span></div>
 </div>
 <div class="info-box info-tip" style="margin-top:1.5rem"><span class="ib-icon">&#128161;</span><div><strong>PF Bar:</strong> A barra de PF keys aparece no rodapé de todas as telas em v&#237;deo reverso, mostrando as fun&#231;&#245;es dispon&#237;veis &#8212; exatamente como no ISPF real.</div></div>
 <div class="info-box info-warn"><span class="ib-icon">&#9888;</span><div><strong>Windows:</strong> Se F1-F12 n&#227;o funcionarem, use os comandos equivalentes: <code>END</code> (=PF3), <code>Q</code> (sair). PF keys funcionam no Windows Terminal, Git Bash e WSL.</div></div>
@@ -393,16 +393,16 @@ footer a{color:#4589FF}
 <div class="arch"><div class="a-title">&#127963; Subsistemas do IBM z/OS Simulator</div>
 <div class="a-label">Interface do Usu&#225;rio</div>
 <div class="a-row"><span class="a-box a-ui">terminal.c</span><span class="a-box a-ui">TSO/ISPF panels</span><span class="a-box a-ui">PF key detection</span></div>
-<div style="color:#555;text-align:center;margin:.4rem 0">&#8597;</div>
+<div style="color:#8D8D8D;text-align:center;margin:.4rem 0">&#8597;</div>
 <div class="a-label">N&#250;cleo IMS (Core)</div>
 <div class="a-row"><span class="a-box a-core">ims_system.c</span><span class="a-box a-core">database.c</span><span class="a-box a-core">dli_calls.c</span><span class="a-box a-core">ssa_parser.c</span></div>
-<div style="color:#555;text-align:center;margin:.4rem 0">&#8597;</div>
+<div style="color:#8D8D8D;text-align:center;margin:.4rem 0">&#8597;</div>
 <div class="a-label">Transaction Manager (TM)</div>
 <div class="a-row"><span class="a-box a-tm">mpp.c (online MPP)</span><span class="a-box a-tm">bmp.c (batch BMP)</span><span class="a-box a-tm">msgqueue.c</span></div>
-<div style="color:#555;text-align:center;margin:.4rem 0">&#8597;</div>
+<div style="color:#8D8D8D;text-align:center;margin:.4rem 0">&#8597;</div>
 <div class="a-label">DFSMS / Datasets</div>
 <div class="a-row"><span class="a-box a-ds">ps.c</span><span class="a-box a-ds">pds.c</span><span class="a-box a-ds">vsam.c</span><span class="a-box a-ds">gdg.c</span><span class="a-box a-ds">idcams.c</span><span class="a-box a-ds">catalog.c</span></div>
-<div style="color:#555;text-align:center;margin:.4rem 0">&#8597;</div>
+<div style="color:#8D8D8D;text-align:center;margin:.4rem 0">&#8597;</div>
 <div class="a-label">z/OS Systems</div>
 <div class="a-row"><span class="a-box" style="border-color:#FF8A80;color:#FF8A80">address_space.c</span><span class="a-box" style="border-color:#FF8A80;color:#FF8A80">svc.c</span><span class="a-box" style="border-color:#FF8A80;color:#FF8A80">console.c</span><span class="a-box" style="border-color:#FF8A80;color:#FF8A80">as_monitor.c</span></div>
 </div>
