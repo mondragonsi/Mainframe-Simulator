@@ -180,6 +180,65 @@ footer a{color:#4589FF}
 <tr><td><code>LISTCAT</code></td><td><code>LISTCAT</code> / <code>LISTCAT DSN</code></td><td>Lista o cat&#225;logo completo ou um dataset espec&#237;fico</td></tr>
 <tr><td><code>DEFINE CLUSTER</code></td><td><code>DEFINE CLUSTER (NAME(X) INDEXED KEYS(8,0))</code></td><td>Cria cluster VSAM via IDCAMS</td></tr>
 </tbody></table>
+<h3 style="margin-top:2rem">&#128194; PDS &#8212; Escrevendo Membros (igual ao ISPF)</h3>
+<p>Para um PDS, o comando <code>WRITE</code> usa a sintaxe <code>DSN(MEMBRO)</code> &#8212; exatamente como no JCL <code>DSN=MINHA.LIB(PROG001)</code>. O simulador executa a sequ&#234;ncia real z/OS: <strong>OPEN OUTPUT &#8594; WRITE &#8594; STOW R &#8594; CLOSE</strong>.</p>
+<div class="terminal"><div class="term-titlebar"><div class="term-dot dot-red"></div><div class="term-dot dot-yellow"></div><div class="term-dot dot-green"></div><span class="term-title">Fluxo PDS &#8212; Criar, popular e navegar membros</span></div><div class="term-body">
+<span class="t-line t-dim">-- 1. Alocar PDS --</span>
+<span class="t-line"><span class="t-prompt">COMMAND ==&gt; </span><span class="t-input">ALLOC MINHA.FONTE PDS</span></span>
+<span class="t-line t-ok"> IEF285I MINHA.FONTE ALLOCATED</span>
+<span class="t-line t-ok"> IGD104I MINHA.FONTE DSORG=PDS RECFM=FB LRECL=80</span>
+<span class="t-line">&nbsp;</span>
+<span class="t-line t-dim">-- 2. Escrever membro PROG001 --</span>
+<span class="t-line"><span class="t-prompt">COMMAND ==&gt; </span><span class="t-input">WRITE MINHA.FONTE(PROG001)</span></span>
+<span class="t-line"> WRITE: MINHA.FONTE(PROG001)  RECFM=FB  LRECL=80</span>
+<span class="t-line"> Enter records (blank line or PF3 to STOW and close):</span>
+<span class="t-line"> --------------------------------------------------------------------------------</span>
+<span class="t-line"><span class="t-prompt"> +0001&gt; </span><span class="t-input">000100 IDENTIFICATION DIVISION.</span></span>
+<span class="t-line"><span class="t-prompt"> +0002&gt; </span><span class="t-input">000200 PROGRAM-ID. PROG001.</span></span>
+<span class="t-line"><span class="t-prompt"> +0003&gt; </span><span class="t-input">000300 PROCEDURE DIVISION.</span></span>
+<span class="t-line"><span class="t-prompt"> +0004&gt; </span><span class="t-dim">[blank = STOW R e fechar]</span></span>
+<span class="t-line"> --------------------------------------------------------------------------------</span>
+<span class="t-line t-ok"> IEF285I MINHA.FONTE(PROG001): 3 RECORD(S) STOW&#39;D</span>
+<span class="t-line">&nbsp;</span>
+<span class="t-line t-dim">-- 3. Escrever segundo membro COPYLIB --</span>
+<span class="t-line"><span class="t-prompt">COMMAND ==&gt; </span><span class="t-input">WRITE MINHA.FONTE(COPYLIB)</span></span>
+<span class="t-line"><span class="t-prompt"> +0001&gt; </span><span class="t-input">01 WS-NOME   PIC X(30).</span></span>
+<span class="t-line"><span class="t-prompt"> +0002&gt; </span><span class="t-input">01 WS-CODIGO PIC 9(8).</span></span>
+<span class="t-line"><span class="t-prompt"> +0003&gt; </span><span class="t-dim">[blank]</span></span>
+<span class="t-line t-ok"> IEF285I MINHA.FONTE(COPYLIB): 2 RECORD(S) STOW&#39;D</span>
+<span class="t-line">&nbsp;</span>
+<span class="t-line t-dim">-- 4. Ver diret&#243;rio do PDS --</span>
+<span class="t-line"><span class="t-prompt">COMMAND ==&gt; </span><span class="t-input">BROWSE MINHA.FONTE</span></span>
+<span class="t-line"> MEMBERS OF MINHA.FONTE</span>
+<span class="t-line"> NAME      RECORDS</span>
+<span class="t-line"> --------  -------</span>
+<span class="t-line t-white"> PROG001         3</span>
+<span class="t-line t-white"> COPYLIB         2</span>
+<span class="t-line"> 2 MEMBER(S) IN DIRECTORY</span>
+<span class="t-line">&nbsp;</span>
+<span class="t-line t-dim">-- 5. Ler conte&#250;do de um membro espec&#237;fico --</span>
+<span class="t-line"><span class="t-prompt">COMMAND ==&gt; </span><span class="t-input">BROWSE MINHA.FONTE(PROG001)</span></span>
+<span class="t-line"> BROWSE: MINHA.FONTE(PROG001)  RECFM=FB  LRECL=80</span>
+<span class="t-line"> --------------------------------------------------------------------------------</span>
+<span class="t-line t-white"> 0001  000100 IDENTIFICATION DIVISION.</span>
+<span class="t-line t-white"> 0002  000200 PROGRAM-ID. PROG001.</span>
+<span class="t-line t-white"> 0003  000300 PROCEDURE DIVISION.</span>
+</div></div>
+<div class="info-box" style="background:#DEFBE6;border-left:4px solid #24A148;margin-top:1rem;border-radius:8px;padding:1rem 1.2rem;display:flex;gap:.8rem"><span style="font-size:1.3rem">&#9989;</span><div><strong>STOW R &#8212; Add or Replace:</strong> O simulador usa <strong>STOW R</strong> (IBM option R), o comportamento padr&#227;o do ISPF Save: adiciona o membro se n&#227;o existir, <em>substitui</em> se j&#225; existir. Reescrever exibe <code>(REPLACING)</code> e confirma com <code>(REPLACED)</code>.</div></div>
+<div class="info-box info-tip" style="margin-top:.8rem"><span class="ib-icon">&#128161;</span><div><strong>Regras de Nome de Membro (IBM DFSMS):</strong> 1 a 8 chars &bull; Primeiro: letra ou # &bull; Demais: alfanum&#233;rico, #, h&#237;fen &bull; Sempre mai&#250;sculas (auto-convertido). V&#225;lido: <code>PROG001</code>, <code>PAY</code>, <code>@CNTL</code> &mdash; Inv&#225;lido: <code>1PROG</code>, <code>TOOLONGNAME</code></div></div>
+<h3 style="margin-top:2rem">&#128203; Refer&#234;ncia Completa de Comandos</h3>
+<table class="cmd-table"><thead><tr><th>Comando</th><th>Exemplo</th><th>O que faz</th></tr></thead><tbody>
+<tr><td><code>ALLOC PS</code></td><td><code>ALLOC MEU.ARQ PS RECFM(FB) LRECL(80)</code></td><td>Aloca dataset sequencial (arquivo simples, leitura do in&#237;cio ao fim)</td></tr>
+<tr><td><code>ALLOC PDS</code></td><td><code>ALLOC MEU.LIB PDS</code></td><td>Aloca dataset particionado (biblioteca de membros)</td></tr>
+<tr><td><code>WRITE PS</code></td><td><code>WRITE MEU.ARQ</code></td><td>Adiciona registros ao dataset PS (equivalente a DISP=MOD)</td></tr>
+<tr style="background:#F0FFF4"><td><code>WRITE PDS</code></td><td><code>WRITE MEU.LIB(PROG001)</code></td><td><strong>Escreve membro PDS:</strong> OPEN OUTPUT &#8594; PUT &#8594; STOW R &#8594; CLOSE</td></tr>
+<tr><td><code>BROWSE PS</code></td><td><code>BROWSE MEU.ARQ</code></td><td>Visualiza registros numerados do dataset sequencial</td></tr>
+<tr><td><code>BROWSE PDS dir</code></td><td><code>BROWSE MEU.LIB</code></td><td>Lista diret&#243;rio PDS: nome e qtd de registros de cada membro</td></tr>
+<tr style="background:#F0FFF4"><td><code>BROWSE PDS mbr</code></td><td><code>BROWSE MEU.LIB(PROG001)</code></td><td><strong>L&#234; membro PDS:</strong> pds_find &#8594; pds_read com numera&#231;&#227;o de linha</td></tr>
+<tr><td><code>DELETE</code></td><td><code>DELETE MEU.LIB</code></td><td>Remove dataset do cat&#225;logo ICF</td></tr>
+<tr><td><code>LISTCAT</code></td><td><code>LISTCAT</code> / <code>LISTCAT DSN</code></td><td>Lista cat&#225;logo completo ou informa&#231;&#245;es de um dataset</td></tr>
+<tr><td><code>DEFINE CLUSTER</code></td><td><code>DEFINE CLUSTER (NAME(X) INDEXED KEYS(8,0))</code></td><td>Cria cluster VSAM via IDCAMS</td></tr>
+</tbody></table>
 <h3 style="margin-top:2rem">&#128260; Exemplo Completo</h3>
 <div class="terminal"><div class="term-titlebar"><div class="term-dot dot-red"></div><div class="term-dot dot-yellow"></div><div class="term-dot dot-green"></div><span class="term-title">Criar, popular e visualizar dataset</span></div><div class="term-body">
 <span class="t-line t-dim">-- Passo 1: Alocar --</span>
