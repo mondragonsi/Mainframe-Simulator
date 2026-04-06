@@ -134,10 +134,10 @@ footer a{color:#4589FF}
 <div class="section-header"><div class="section-icon icon-green">&#9889;</div><h2>In&#237;cio R&#225;pido</h2></div>
 <p>Para come&#231;ar, compile e execute o simulador:</p>
 <div class="terminal">
-<div class="term-titlebar"><div class="term-dot dot-red"></div><div class="term-dot dot-yellow"></div><div class="term-dot dot-green"></div><span class="term-title">Terminal &#8212; c:\dev\IMS</span></div>
+<div class="term-titlebar"><div class="term-dot dot-red"></div><div class="term-dot dot-yellow"></div><div class="term-dot dot-green"></div><span class="term-title">Terminal &#8212; c:\dev\Mainframe-Simulator</span></div>
 <div class="term-body">
 <span class="t-line"><span class="t-dim">$</span> <span class="t-input">make</span>          <span class="t-dim"># compilar</span></span>
-<span class="t-line"><span class="t-dim">$</span> <span class="t-input">./ims.exe</span>     <span class="t-dim"># iniciar</span></span>
+<span class="t-line"><span class="t-dim">$</span> <span class="t-input">./mainframe-simulator.exe</span>     <span class="t-dim"># iniciar</span></span>
 <span class="t-line">&nbsp;</span>
 <span class="t-line t-header">&#9556;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9559;</span>
 <span class="t-line t-header">&#9553;    IBM z/OS MAINFRAME SIMULATOR  v2.0     &#9553;</span>
@@ -151,8 +151,8 @@ footer a{color:#4589FF}
 <span class="t-line"><span class="t-prompt">COMMAND ==&gt; </span><span class="t-input">2</span></span>
 </div></div>
 <ul class="steps">
-<li><strong>Compile:</strong> Abra o terminal na pasta <code>c:\dev\IMS</code> e execute <code>make</code>. Isso gera <code>ims.exe</code>.</li>
-<li><strong>Inicie:</strong> Execute <code>./ims.exe</code>. O menu principal aparece com as 3 &#225;reas.</li>
+<li><strong>Compile:</strong> Abra o terminal na pasta <code>c:\dev\Mainframe-Simulator</code> e execute <code>make</code>. Isso gera <code>mainframe-simulator.exe</code>.</li>
+<li><strong>Inicie:</strong> Execute <code>./mainframe-simulator.exe</code>. O menu principal aparece com as 3 &#225;reas.</li>
 <li><strong>Escolha:</strong> Digite <kbd>2</kbd> para Dataset Manager, <kbd>1</kbd> para IMS DB, ou <kbd>3</kbd> para Monitor.</li>
 <li><strong>Explore:</strong> Pressione <kbd>F1</kbd> para ajuda contextual, <kbd>F3</kbd> para voltar ao menu anterior.</li>
 </ul>
@@ -421,7 +421,7 @@ footer a{color:#4589FF}
 </section>
 <section id="faq">
 <div class="section-header"><div class="section-icon icon-yellow">&#10067;</div><h2>Perguntas Frequentes</h2></div>
-<details><summary>&#128296; Como compilar no Windows?</summary><div class="details-body"><p>Instale o <strong>MinGW-w64</strong> (GCC para Windows) &#8212; recomendamos o <a href="https://www.w64devkit.com" target="_blank">w64devkit</a>. Extraia e adicione ao PATH. Depois execute <code>make</code> na pasta <code>c:\dev\IMS</code>.</p></div></details>
+<details><summary>&#128296; Como compilar no Windows?</summary><div class="details-body"><p>Instale o <strong>MinGW-w64</strong> (GCC para Windows) &#8212; recomendamos o <a href="https://www.w64devkit.com" target="_blank">w64devkit</a>. Extraia e adicione ao PATH. Depois execute <code>make</code> na pasta <code>c:\dev\Mainframe-Simulator</code>.</p></div></details>
 <details><summary>&#128193; Onde os datasets ficam armazenados?</summary><div class="details-body"><p>Os datasets s&#227;o mantidos em mem&#243;ria durante a sess&#227;o. O cat&#225;logo ICF &#233; inicializado a cada execu&#231;&#227;o. Em vers&#227;o futura, os datasets ser&#227;o persistidos em arquivos locais entre sess&#245;es.</p></div></details>
 <details><summary>&#9000; As PF Keys n&#227;o funcionam no meu terminal</summary><div class="details-body"><p>O simulador detecta teclas F1-F12 via sequ&#234;ncias de escape ANSI. Se n&#227;o funcionar, use: <code>END</code> (=PF3), <code>Q</code> (sair). O Windows Terminal e Git Bash normalmente funcionam bem.</p></div></details>
 <details><summary>&#128247; Como carregar o banco HOSPITAL?</summary><div class="details-body"><p>Execute <code>make demo</code>. Isso inicia o simulador com o banco HOSPITAL pr&#233;-carregado e executa uma sequ&#234;ncia de DL/I calls demonstrando os segmentos PACIENTE, DOCTOR, DIAGNOSE etc.</p></div></details>

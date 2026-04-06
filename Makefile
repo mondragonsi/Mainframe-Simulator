@@ -39,7 +39,7 @@ ALL_SRC = $(CORE_SRC) $(TM_SRC) $(UI_SRC) $(ZOS_SRC) $(DATASETS_SRC) $(MAIN_SRC)
 
 OBJ = $(patsubst $(SRC_DIR)/%.c,$(BUILD_DIR)/%.o,$(ALL_SRC))
 
-TARGET = $(BIN_DIR)/ims.exe
+TARGET = $(BIN_DIR)/mainframe-simulator.exe
 
 all: dirs $(TARGET)
 

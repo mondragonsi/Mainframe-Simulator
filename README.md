@@ -1,6 +1,6 @@
-# IBM IMS Simulator
+# IBM Mainframe Simulator
 
-A learning-focused simulator for IBM Information Management System (IMS) that replicates the mainframe IMS experience for training purposes.
+A learning-focused simulator for the IBM z/OS mainframe environment — covering IMS DB/TM, DB2, COBOL, z/OS datasets, JCL, and address spaces — for training purposes.
 
 ## Features
 
@@ -32,7 +32,7 @@ A learning-focused simulator for IBM Information Management System (IMS) that re
 
 ### Compile
 ```bash
-cd c:\dev\IMS
+cd c:\dev\Mainframe-Simulator
 make
 ```
 
@@ -120,7 +120,7 @@ HOSPITAL (root)
 ## Project Structure
 
 ```
-IMS/
+Mainframe-Simulator/
 ├── src/
 │   ├── core/
 │   │   ├── ims.h           # Main header

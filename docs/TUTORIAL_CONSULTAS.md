@@ -15,8 +15,8 @@ Este tutorial mostra como fazer consultas (equivalente a SELECT) no simulador IM
 ## 1. Iniciando o Simulador
 
 ```bash
-cd c:\dev\IMS
-.\ims.exe -l
+cd c:\dev\Mainframe-Simulator
+.\mainframe-simulator.exe -l
 ```
 
 O flag `-l` carrega automaticamente o banco HOSPITAL.

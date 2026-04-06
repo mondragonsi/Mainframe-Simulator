@@ -11,7 +11,7 @@ Target learners: students new to mainframe, COBOL developers, z/OS operators in 
 ## Architecture Overview
 
 ```
-IMS/
+Mainframe-Simulator/
 ├── src/
 │   ├── core/           # IMS engine: DB engine, DL/I calls, SSA parser, PSB/PCB
 │   ├── tm/             # IMS Transaction Manager: MPP, BMP regions, message queues
@@ -43,7 +43,7 @@ IMS/
 ## Build System
 
 ```bash
-make              # build ims.exe
+make              # build mainframe-simulator.exe
 make run          # interactive mode
 make demo         # load HOSPITAL DB and run demo
 make batch        # batch mode demo
