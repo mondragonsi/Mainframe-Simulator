@@ -732,6 +732,56 @@ void display_segment_data(const char *segment_name, const char *data) {
  *   BROWSE  â€” view PS/PDS dataset contents
  * ========================================================================= */
 
+/* =========================================================================
+ * DS PANEL HELPERS — parse DSN(MEMBER), validate member names
+ * ========================================================================= */
+
+/* Parse 'MY.PDS(MEMBER1)' into dsn + member.
+ * member[] is empty string if no member specified. */
+static int ds_parse_dsn_member(const char *token,
+                               char *dsn, char *member) {
+    const char *lp = strchr(token, '(');
+    if (lp) {
+        int dlen = (int)(lp - token);
+        if (dlen > DS_DSN_LEN) dlen = DS_DSN_LEN;
+        strncpy(dsn, token, (size_t)dlen);
+        dsn[dlen] = '\0';
+        const char *rp = strchr(lp + 1, ')');
+        int mlen = rp ? (int)(rp - lp - 1) : (int)strlen(lp + 1);
+        if (mlen > DS_MEMBER_LEN) mlen = DS_MEMBER_LEN;
+        strncpy(member, lp + 1, (size_t)mlen);
+        member[mlen] = '\0';
+        for (int i = 0; member[i]; i++)
+            member[i] = (char)toupper((unsigned char)member[i]);
+    } else {
+        strncpy(dsn, token, DS_DSN_LEN);
+        dsn[DS_DSN_LEN] = '\0';
+        member[0] = '\0';
+    }
+    for (int i = 0; dsn[i]; i++)
+        dsn[i] = (char)toupper((unsigned char)dsn[i]);
+    return 0;
+}
+
+/* IBM member name rules: 1-8 chars, first = alpha|#,
+ * rest = alnum|#|-  (z/OS DFSMS Using Data Sets, ch.5) */
+static int ds_valid_member(const char *name) {
+    int n = (int)strlen(name);
+    if (n < 1 || n > 8) return 0;
+    char c = name[0];
+    if (!isalpha((unsigned char)c) && c != '#' && c != '$' && c != '@')
+        return 0;
+    for (int i = 1; i < n; i++) {
+        c = name[i];
+        if (!isalnum((unsigned char)c) &&
+            c != '#' && c != '$' && c != '@' && c != '-')
+            return 0;
+    }
+    return 1;
+}
+
+        /* ---- WRITE  (PS and PDS) ---- */
+
 void terminal_ds_panel(void) {
     char input[256];
 
@@ -826,68 +876,121 @@ void terminal_ds_panel(void) {
             continue;
         }
         if (strcmp(cmd, "WRITE") == 0) {
-            char dsn[DS_DSN_LEN + 1] = {0};
-            if (sscanf(input, "%*s %44s", dsn) != 1) {
-                printf(" Syntax: WRITE <dsn>\n");
+            char token[DS_DSN_LEN + DS_MEMBER_LEN + 4] = {0};
+            if (sscanf(input, "%*s %79s", token) != 1) {
+                printf(" Syntax: WRITE <dsn>         -- sequential dataset\n");
+                printf("         WRITE <dsn(member)> -- PDS member\n");
                 printf("\n Press ENTER to continue...");
-                fflush(stdout);
-                getchar();
-                continue;
+                fflush(stdout); getchar(); continue;
             }
+            char dsn[DS_DSN_LEN + 1] = {0};
+            char mbr[DS_MEMBER_LEN + 1] = {0};
+            ds_parse_dsn_member(token, dsn, mbr);
+
             ZOS_DATASET *ds = ds_catalog_find(dsn);
             if (!ds) {
                 printf(" IGD101I DATASET '%s' NOT IN CATALOG\n", dsn);
-                printf(" Tip: use ALLOC %s PS RECFM(FB) LRECL(80) first\n", dsn);
+                if (mbr[0])
+                    printf(" Tip: ALLOC %s PDS first\n", dsn);
+                else
+                    printf(" Tip: ALLOC %s PS RECFM(FB) LRECL(80) first\n", dsn);
                 printf("\n Press ENTER to continue...");
-                fflush(stdout);
-                getchar();
-                continue;
+                fflush(stdout); getchar(); continue;
             }
-            if (ds->dsorg != DSORG_PS) {
-                printf(" IEC020I WRITE only supported for PS (sequential) datasets\n");
-                printf("\n Press ENTER to continue...");
-                fflush(stdout);
-                getchar();
-                continue;
-            }
-            ZOS_DCB *dcb = ps_open(dsn, "WRITE", OPEN_EXTEND,
-                                   ds->recfm, ds->lrecl, ds->blksize);
-            if (!dcb) {
-                printf(" IEC030I OPEN FAILED for %s\n", dsn);
-                printf("\n Press ENTER to continue...");
-                fflush(stdout);
-                getchar();
-                continue;
-            }
-            int lrecl = dcb->lrecl > 0 ? dcb->lrecl : 80;
-            printf("\n WRITE: %s  RECFM=%s  LRECL=%d\n", dsn,
-                   ds->recfm==RECFM_FB?"FB":ds->recfm==RECFM_VB?"VB":
-                   ds->recfm==RECFM_F?"F":ds->recfm==RECFM_V?"V":"U", lrecl);
-            printf(" Enter records (blank line or PF3 to stop):\n");
-            printf(" --------------------------------------------------------------------------------\n");
-            int written = 0;
-            char rec[32761];
-            while (1) {
-                printf(" +%04d> ", written + 1);
-                fflush(stdout);
-                PF_KEY wpf = term_read_input(rec, (int)sizeof(rec));
-                if (wpf == PF3 || wpf == PF12 || !rec[0]) break;
-                int rc_w = ps_write(dcb, rec, (int)strlen(rec));
-                if (rc_w != DS_OK) {
-                    printf(" IEC040I WRITE ERROR RC=%d\n", rc_w);
-                    break;
+
+            /* ---- PS write ---- */
+            if (ds->dsorg == DSORG_PS) {
+                if (mbr[0]) {
+                    printf(" IEC020I '%s' is PS — use WRITE %s (no member)\n", dsn, dsn);
+                    printf("\n Press ENTER to continue...");
+                    fflush(stdout); getchar(); continue;
                 }
-                written++;
+                ZOS_DCB *dcb = ps_open(dsn, "WRITE", OPEN_EXTEND,
+                                       ds->recfm, ds->lrecl, ds->blksize);
+                if (!dcb) {
+                    printf(" IEC030I OPEN FAILED for %s\n", dsn);
+                    printf("\n Press ENTER to continue...");
+                    fflush(stdout); getchar(); continue;
+                }
+                int lrecl = dcb->lrecl > 0 ? dcb->lrecl : 80;
+                printf("\n WRITE: %s  RECFM=%s  LRECL=%d\n", dsn,
+                       ds->recfm==RECFM_FB?"FB":ds->recfm==RECFM_VB?"VB":
+                       ds->recfm==RECFM_F?"F":ds->recfm==RECFM_V?"V":"U", lrecl);
+                printf(" Enter records (blank line or PF3 to stop):\n");
+                printf(" --------------------------------------------------------------------------------\n");
+                int written = 0; char rec[32761];
+                while (1) {
+                    printf(" +%04d> ", written + 1); fflush(stdout);
+                    PF_KEY wpf = term_read_input(rec, (int)sizeof(rec));
+                    if (wpf == PF3 || wpf == PF12 || !rec[0]) break;
+                    if (ps_write(dcb, rec, (int)strlen(rec)) != DS_OK) {
+                        printf(" IEC040I WRITE ERROR\n"); break;
+                    }
+                    written++;
+                }
+                ps_close(dcb);
+                printf(" --------------------------------------------------------------------------------\n");
+                printf(" IEF285I %s: %d RECORD(S) WRITTEN\n", dsn, written);
+
+            /* ---- PDS member write ---- */
+            } else if (ds->dsorg == DSORG_PO) {
+                if (!mbr[0]) {
+                    printf(" IEC020I PDS requires member: WRITE %s(MEMBER)\n", dsn);
+                    printf("\n Press ENTER to continue...");
+                    fflush(stdout); getchar(); continue;
+                }
+                if (!ds_valid_member(mbr)) {
+                    printf(" IEC130I INVALID MEMBER NAME '%s'\n", mbr);
+                    printf("   Rules: 1-8 chars, first=alpha|#,");
+                    printf(" rest=alnum|#|-\n");
+                    printf("\n Press ENTER to continue...");
+                    fflush(stdout); getchar(); continue;
+                }
+                ZOS_DCB *dcb = pds_open(dsn, "WRITE", OPEN_OUTPUT);
+                if (!dcb) {
+                    printf(" IEC030I PDS OPEN FAILED for %s\n", dsn);
+                    printf("\n Press ENTER to continue...");
+                    fflush(stdout); getchar(); continue;
+                }
+                int lrecl = dcb->lrecl > 0 ? dcb->lrecl : 80;
+                /* Check if member exists — STOW R will replace */
+                int replacing = (pds_find_member(dcb->dataset, mbr) != NULL);
+                printf("\n WRITE: %s(%s)  RECFM=%s  LRECL=%d%s\n",
+                       dsn, mbr,
+                       ds->recfm==RECFM_FB?"FB":ds->recfm==RECFM_VB?"VB":
+                       ds->recfm==RECFM_F?"F":ds->recfm==RECFM_V?"V":"U",
+                       lrecl, replacing ? "  (REPLACING)" : "");
+                printf(" Enter records (blank line or PF3 to STOW and close):\n");
+                printf(" --------------------------------------------------------------------------------\n");
+                int written = 0; char rec[32761];
+                while (1) {
+                    printf(" +%04d> ", written + 1); fflush(stdout);
+                    PF_KEY wpf = term_read_input(rec, (int)sizeof(rec));
+                    if (wpf == PF3 || wpf == PF12 || !rec[0]) break;
+                    if (pds_write(dcb, rec, (int)strlen(rec)) != DS_OK) {
+                        printf(" IEC040I WRITE ERROR\n"); break;
+                    }
+                    written++;
+                }
+                /* STOW R — Add or Replace (IBM STOW option R) */
+                int stow_rc = pds_stow(dcb, mbr);
+                pds_close(dcb);
+                printf(" --------------------------------------------------------------------------------\n");
+                if (stow_rc == DS_OK) {
+                    printf(" IEF285I %s(%s): %d RECORD(S) STOW'D%s\n",
+                           dsn, mbr, written, replacing ? " (REPLACED)" : "");
+                } else {
+                    printf(" IEC026I STOW FAILED RC=%d FOR %s(%s)\n",
+                           stow_rc, dsn, mbr);
+                }
+            } else {
+                printf(" IEC020I WRITE: DSORG not PS or PO for '%s'\n", dsn);
             }
-            ps_close(dcb);
-            printf(" --------------------------------------------------------------------------------\n");
-            printf(" IEF285I %s: %d RECORD(S) WRITTEN\n", dsn, written);
             printf("\n Press ENTER to continue...");
-            fflush(stdout);
-            getchar();
-            continue;
+            fflush(stdout); getchar(); continue;
         }
 
+        /* ---- BROWSE (PS and PDS member) ---- */
         if (strcmp(cmd, "DELETE") == 0) {
             char dsn[DS_DSN_LEN + 1] = {0};
             if (sscanf(input, "%*s %44s", dsn) != 1) {
@@ -951,52 +1054,79 @@ void terminal_ds_panel(void) {
         }
 
         if (strcmp(cmd, "BROWSE") == 0) {
+            char token[DS_DSN_LEN + DS_MEMBER_LEN + 4] = {0};
+            if (sscanf(input, "%*s %79s", token) != 1) {
+                printf(" Syntax: BROWSE <dsn>         -- sequential / PDS directory\n");
+                printf("         BROWSE <dsn(member)> -- PDS member contents\n");
+                printf("\n Press ENTER to continue...");
+                fflush(stdout); getchar(); continue;
+            }
             char dsn[DS_DSN_LEN + 1] = {0};
-            if (sscanf(input, "%*s %44s", dsn) != 1) {
-                printf(" Syntax: BROWSE <dsn>\n");
-            } else {
-                ZOS_DATASET *ds = ds_catalog_find(dsn);
-                if (!ds) {
-                    printf(" IGG001I DATASET '%s' NOT IN CATALOG\n", dsn);
-                } else if (ds->dsorg == DSORG_PS) {
-                    ZOS_DCB *dcb = ps_open(dsn, "BROWSE", OPEN_INPUT,
-                                           ds->recfm, ds->lrecl, ds->blksize);
-                    if (dcb) {
-                        printf("\n BROWSE: %s  RECFM=%s  LRECL=%d\n", dsn,
-                               ds->recfm==RECFM_FB?"FB":ds->recfm==RECFM_VB?"VB":
-                               ds->recfm==RECFM_F?"F":ds->recfm==RECFM_V?"V":"U",
-                               ds->lrecl);
-                        printf(" --------------------------------------------------------------------------------\n");
-                        char buf[32761];
-                        int rlen, shown = 0;
-                        while (ps_read(dcb, buf, &rlen)==DS_OK && shown < 50) {
-                            buf[rlen] = '\0';
-                            int tl = rlen;
-                            while (tl > 0 && buf[tl-1]==' ') tl--;
-                            buf[tl] = '\0';
-                            printf(" %04d  %s\n", shown+1, buf);
-                            shown++;
-                        }
-                        if (shown == 0) printf(" (EMPTY DATASET)\n");
-                        else if (shown == 50) printf(" ... (first 50 records shown)\n");
-                        ps_close(dcb);
+            char mbr[DS_MEMBER_LEN + 1] = {0};
+            ds_parse_dsn_member(token, dsn, mbr);
+
+            ZOS_DATASET *ds = ds_catalog_find(dsn);
+            if (!ds) {
+                printf(" IGG001I DATASET '%s' NOT IN CATALOG\n", dsn);
+            } else if (ds->dsorg == DSORG_PS) {
+                ZOS_DCB *dcb = ps_open(dsn, "BROWSE", OPEN_INPUT,
+                                       ds->recfm, ds->lrecl, ds->blksize);
+                if (dcb) {
+                    printf("\n BROWSE: %s  RECFM=%s  LRECL=%d\n", dsn,
+                           ds->recfm==RECFM_FB?"FB":ds->recfm==RECFM_VB?"VB":
+                           ds->recfm==RECFM_F?"F":ds->recfm==RECFM_V?"V":"U",
+                           ds->lrecl);
+                    printf(" --------------------------------------------------------------------------------\n");
+                    char buf[32761]; int rlen, shown = 0;
+                    while (ps_read(dcb, buf, &rlen)==DS_OK && shown < 50) {
+                        buf[rlen] = '\0';
+                        int tl = rlen; while (tl>0 && buf[tl-1]==' ') tl--;
+                        buf[tl] = '\0';
+                        printf(" %04d  %s\n", shown+1, buf); shown++;
                     }
-                } else if (ds->dsorg == DSORG_PO) {
-                    ZOS_DCB *dcb = pds_open(dsn, "BROWSE", OPEN_INPUT);
-                    if (dcb) {
+                    if (shown==0) printf(" (EMPTY DATASET)\n");
+                    else if (shown==50) printf(" ... (first 50 records shown)\n");
+                    ps_close(dcb);
+                }
+            } else if (ds->dsorg == DSORG_PO) {
+                ZOS_DCB *dcb = pds_open(dsn, "BROWSE", OPEN_INPUT);
+                if (dcb) {
+                    if (!mbr[0]) {
+                        /* No member — show directory listing */
                         pds_list_members(dcb);
+                    } else {
+                        /* Browse specific member */
+                        int rc = pds_find(dcb, mbr);
+                        if (rc == DS_MEMBER_NF) {
+                            printf(" IEC143I MEMBER '%s' NOT FOUND IN %s\n",
+                                   mbr, dsn);
+                        } else {
+                            printf("\n BROWSE: %s(%s)  RECFM=%s  LRECL=%d\n",
+                                   dsn, mbr,
+                                   ds->recfm==RECFM_FB?"FB":ds->recfm==RECFM_VB?"VB":
+                                   ds->recfm==RECFM_F?"F":ds->recfm==RECFM_V?"V":"U",
+                                   ds->lrecl);
+                            printf(" --------------------------------------------------------------------------------\n");
+                            char buf[32761]; int rlen, shown = 0;
+                            while (pds_read(dcb, buf, &rlen)==DS_OK && shown<50) {
+                                buf[rlen] = '\0';
+                                int tl = rlen;
+                                while (tl>0 && buf[tl-1]==' ') tl--;
+                                buf[tl] = '\0';
+                                printf(" %04d  %s\n", shown+1, buf); shown++;
+                            }
+                            if (shown==0) printf(" (EMPTY MEMBER)\n");
+                            else if (shown==50) printf(" ... (first 50 records)\n");
+                        }
                         pds_close(dcb);
                     }
-                } else {
-                    printf(" BROWSE: DSORG not supported for inline browse\n");
                 }
+            } else {
+                printf(" BROWSE: DSORG not supported for '%s'\n", dsn);
             }
             printf("\n Press ENTER to continue...");
-            fflush(stdout);
-            getchar();
-            continue;
+            fflush(stdout); getchar(); continue;
         }
-
         if (pf == PF1) {
             printf("\n Dataset Manager Help:\n");
             printf("  ALLOC dsn PS [RECFM(FB)] [LRECL(80)]  -- allocate sequential dataset\n");
