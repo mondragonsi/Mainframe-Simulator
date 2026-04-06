@@ -13,6 +13,7 @@
 #include "../zos/as_monitor.h"
 #include "../zos/address_space.h"
 #include "../datasets/datasets.h"
+#include "ispf.h"
 
 /* =========================================================================
  * PF KEY HANDLING  (ISPF standard: PF1=HELP PF3=END PF7=UP PF8=DOWN PF12=CANCEL)
@@ -430,7 +431,7 @@ int terminal_process_command(const char *command) {
     }
 
     if (strcmp(command, "/DS") == 0 || strcmp(command, "/DATASETS") == 0) {
-        terminal_ds_panel();
+        ispf_utilities_menu();
         return 0;
     }
     

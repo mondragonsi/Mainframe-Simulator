@@ -17,7 +17,8 @@ TM_SRC = $(SRC_DIR)/tm/msgqueue.c \
          $(SRC_DIR)/tm/mpp.c \
          $(SRC_DIR)/tm/bmp.c
 
-UI_SRC = $(SRC_DIR)/ui/terminal.c
+UI_SRC = $(SRC_DIR)/ui/terminal.c \
+         $(SRC_DIR)/ui/ispf.c
 
 ZOS_SRC = $(SRC_DIR)/zos/address_space.c \
           $(SRC_DIR)/zos/svc.c \
