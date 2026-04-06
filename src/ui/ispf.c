@@ -15,7 +15,6 @@
 
 #include "datasets/datasets.h"
 #include "ispf.h"
-
 /* -------------------------------------------------------------------------
  * ANSI positioning / attribute macros
  * ---------------------------------------------------------------------- */
@@ -32,6 +31,155 @@
 #define ISPF_YELLOW      printf("\033[33m")
 #define ISPF_GREEN       printf("\033[32m")
 #define ISPF_WHITE       printf("\033[37m")
+
+
+#ifdef _WIN32
+#include <conio.h>
+#endif
+#define IKEY_F1    (-1)
+#define IKEY_F3    (-3)
+#define IKEY_F7    (-7)
+#define IKEY_F8    (-8)
+#define IKEY_F12   (-12)
+#define IKEY_TAB   (-20)
+#define IKEY_STAB  (-21)
+#define IKEY_ENTER (-22)
+#define IKEY_BS    (-23)
+static int ispf_getkey(void) {
+    int c;
+#ifdef _WIN32
+    c = _getch();
+#else
+    c = getchar();
+#endif
+    if (c == 27) {
+        int c2;
+#ifdef _WIN32
+        c2 = _getch();
+#else
+        c2 = getchar();
+#endif
+        if (c2 == 91) {
+            int c3;
+#ifdef _WIN32
+            c3 = _getch();
+#else
+            c3 = getchar();
+#endif
+            if (c3 >= 49 && c3 <= 57) {
+                char seq[4]; int si = 0;
+                seq[si++] = (char)c3;
+                int c4;
+#ifdef _WIN32
+                c4 = _getch();
+#else
+                c4 = getchar();
+#endif
+                if (c4 != 126) {
+                    seq[si++] = (char)c4;
+                    int c5;
+#ifdef _WIN32
+                    c5 = _getch();
+#else
+                    c5 = getchar();
+#endif
+                    (void)c5;
+                }
+                seq[si] = 0;
+                switch (atoi(seq)) {
+                    case 11: return IKEY_F1;
+                    case 13: return IKEY_F3;
+                    case 18: return IKEY_F7;
+                    case 19: return IKEY_F8;
+                    case 24: return IKEY_F12;
+                    default: return -99;
+                }
+            } else if (c3 == 90) return IKEY_STAB;
+            else if (c3 == 65)   return IKEY_F7;
+            else if (c3 == 66)   return IKEY_F8;
+        } else if (c2 == 79) {
+            int c3;
+#ifdef _WIN32
+            c3 = _getch();
+#else
+            c3 = getchar();
+#endif
+            switch (c3) {
+                case 80: return IKEY_F1;
+                case 82: return IKEY_F3;
+                default: return -99;
+            }
+        }
+        return -99;
+    }
+    if (c == 0 || c == 224) {
+        int c2;
+#ifdef _WIN32
+        c2 = _getch();
+#else
+        c2 = getchar();
+#endif
+        switch (c2) {
+            case 59:  return IKEY_F1;
+            case 61:  return IKEY_F3;
+            case 65:  return IKEY_F7;
+            case 66:  return IKEY_F8;
+            case 134: return IKEY_F12;
+            case 15:  return IKEY_STAB;
+            case 72:  return IKEY_F7;
+            case 80:  return IKEY_F8;
+            default:  return -99;
+        }
+    }
+    if (c == 9)              return IKEY_TAB;
+    if (c == 13 || c == 10) return IKEY_ENTER;
+    if (c == 8 || c == 127) return IKEY_BS;
+    if (c == 3 || c == 4)   return IKEY_F3;
+    return c;
+}
+static int ispf_readline(int row, int col, int width, char *buf, int maxlen)
+{
+    int pos = (int)strlen(buf);
+    int i, k;
+    ISPF_GOTO(row, col);
+    ISPF_CYAN; ISPF_SHOW_CUR;
+    for (i = 0; i < width; i++)
+        putchar(buf[i] ? buf[i] : 95);
+    ISPF_GOTO(row, col + pos);
+    fflush(stdout);
+    for (;;) {
+        k = ispf_getkey();
+        if (k == IKEY_F3 || k == IKEY_F12 ||
+            k == IKEY_TAB || k == IKEY_STAB || k == IKEY_ENTER) {
+            buf[pos] = 0;
+            ISPF_NORM; ISPF_HIDE_CUR;
+            return k;
+        }
+        if (k == IKEY_BS) {
+            if (pos > 0) {
+                pos--;
+                buf[pos] = 0;
+                ISPF_GOTO(row, col + pos);
+                putchar(95);
+                ISPF_GOTO(row, col + pos);
+                fflush(stdout);
+            }
+            continue;
+        }
+        if (k > 31 && k < 127 && pos < maxlen - 1) {
+            char ch = (char)toupper((unsigned char)k);
+            buf[pos++] = ch;
+            buf[pos]   = 0;
+            putchar(ch);
+            if (pos < width) {
+                int save = pos;
+                for (i = pos; i < width; i++) putchar(95);
+                ISPF_GOTO(row, col + save);
+            }
+            fflush(stdout);
+        }
+    }
+}
 
 /* -------------------------------------------------------------------------
  * Panel dimensions
@@ -162,27 +310,20 @@ static void draw_pf_bar(void)
 /* -------------------------------------------------------------------------
  * read_cmd — print "Command ===>" prompt on row 3, read input, uppercase
  * ---------------------------------------------------------------------- */
-static void read_cmd(char *buf, int maxlen)
+static int read_cmd(char *buf, int maxlen)
 {
-    char tmp[256];
+    int k;
+    buf[0] = 0;
     ISPF_GOTO(CMD_ROW, 1);
     ISPF_CLR_EOL;
     ISPF_WHITE;
     printf(" Command ===>");
-    ISPF_CYAN;
-    printf(" ");
     ISPF_NORM;
-    ISPF_SHOW_CUR;
     fflush(stdout);
-
-    if (fgets(tmp, (int)sizeof(tmp), stdin) == NULL)
-        tmp[0] = '\0';
-    str_rtrim(tmp);
-    str_upper(tmp);
-
-    strncpy(buf, tmp, (size_t)(maxlen - 1));
-    buf[maxlen - 1] = '\0';
-    ISPF_HIDE_CUR;
+    k = ispf_readline(CMD_ROW, 14, 60, buf, maxlen);
+    if (k == IKEY_F3 || k == IKEY_F12) return IKEY_F3;
+    if (strcmp(buf, "END") == 0 || strcmp(buf, "=X") == 0) return IKEY_F3;
+    return 0;
 }
 
 /* -------------------------------------------------------------------------
@@ -204,25 +345,10 @@ static void show_field(int row, int col, int width, const char *val)
  * read_field — show field, read new value; if blank keeps existing value
  *              uppercases result
  * ---------------------------------------------------------------------- */
-static void read_field(int row, int col, int width, char *buf, int maxlen)
+static int read_field(int row, int col, int width, char *buf, int maxlen)
 {
-    char tmp[256];
     show_field(row, col, width, buf);
-    ISPF_GOTO(row, col);
-    ISPF_SHOW_CUR;
-    fflush(stdout);
-
-    if (fgets(tmp, (int)sizeof(tmp), stdin) == NULL)
-        tmp[0] = '\0';
-    str_rtrim(tmp);
-
-    if (tmp[0] != '\0') {
-        str_upper(tmp);
-        strncpy(buf, tmp, (size_t)(maxlen - 1));
-        buf[maxlen - 1] = '\0';
-    }
-    /* else: keep existing buf */
-    ISPF_HIDE_CUR;
+    return ispf_readline(row, col, width, buf, maxlen);
 }
 
 /* -------------------------------------------------------------------------
@@ -326,7 +452,7 @@ void ispf_utilities_menu(void)
         ISPF_SHOW_CUR;
         fflush(stdout);
 
-        read_cmd(cmd, (int)sizeof(cmd));
+        if (read_cmd(cmd, (int)sizeof(cmd)) == IKEY_F3) { ISPF_CLR_SCR; ISPF_NORM; return; }
 
         if (strcmp(cmd, "END") == 0 || strcmp(cmd, "=X") == 0) {
             ISPF_CLR_SCR;
@@ -780,39 +906,31 @@ static void ispf_allocate_panel(const char *initial_dsn)
         show_field(20, 23, 8,  profile);
         show_field(21, 23, 4,  mixed);
 
-        draw_pf_bar();
-
-        ISPF_GOTO(6, 23);
-        ISPF_SHOW_CUR;
-        fflush(stdout);
-
-        /* Read DSN field */
+                draw_pf_bar();
         {
-            char line[256];
-            ISPF_CLR_EOL;
-            ISPF_CYAN; printf("%-*s", DS_DSN_LEN, dsn); ISPF_NORM;
-            ISPF_GOTO(6, 23);
-            fflush(stdout);
-            if (fgets(line, (int)sizeof(line), stdin)) {
-                str_rtrim(line);
-                str_upper(line);
-                if (strcmp(line, "END") == 0) return;
-                if (line[0] != '\0') {
-                    strncpy(dsn, line, DS_DSN_LEN);
-                    dsn[DS_DSN_LEN] = '\0';
-                }
+            struct { int row,col,wid,ml; char *b; } flds[] = {
+                {  6, 23, 44, DS_DSN_LEN,               dsn         },
+                { 12, 23,  8, (int)sizeof(space_units),  space_units },
+                { 13, 23,  6, (int)sizeof(primary),      primary     },
+                { 14, 23,  6, (int)sizeof(secondary),    secondary   },
+                { 15, 23,  6, (int)sizeof(dir_blocks),   dir_blocks  },
+                { 16, 23,  4, (int)sizeof(recfm_buf),    recfm_buf   },
+                { 17, 23,  6, (int)sizeof(lrecl_buf),    lrecl_buf   },
+                { 18, 23,  6, (int)sizeof(blksize_buf),  blksize_buf },
+                { 19, 23,  8, (int)sizeof(dstype),       dstype      }
+            };
+            int nf = (int)(sizeof(flds)/sizeof(flds[0]));
+            int cur = 0, done = 0, cancelled = 0;
+            while (!done && !cancelled) {
+                int k = read_field(flds[cur].row, flds[cur].col,
+                                   flds[cur].wid, flds[cur].b, flds[cur].ml);
+                if (k == IKEY_F3 || k == IKEY_F12) { cancelled = 1; break; }
+                if (k == IKEY_STAB) { cur = (cur - 1 + nf) % nf; continue; }
+                cur = (cur + 1) % nf;
+                if (k == IKEY_ENTER && cur == 0) { done = 1; break; }
             }
+            if (cancelled) return;
         }
-
-        /* Read critical fields */
-        read_field(12, 23, 8, space_units, (int)sizeof(space_units));
-        read_field(15, 23, 6, dir_blocks,  (int)sizeof(dir_blocks));
-        read_field(16, 23, 4, recfm_buf,   (int)sizeof(recfm_buf));
-        read_field(17, 23, 6, lrecl_buf,   (int)sizeof(lrecl_buf));
-        read_field(18, 23, 6, blksize_buf, (int)sizeof(blksize_buf));
-        read_field(19, 23, 8, dstype,      (int)sizeof(dstype));
-
-        ISPF_HIDE_CUR;
 
         if (dsn[0] == '\0') {
             set_msg("MISSING", "Data set name required");
@@ -913,9 +1031,8 @@ static void ispf_dslist_panel(void)
 
         draw_pf_bar();
 
-        read_cmd(filter, DS_DSN_LEN + 1);
+        if (read_cmd(filter, DS_DSN_LEN + 1) == IKEY_F3) return;
 
-        if (strcmp(filter, "END") == 0 || strcmp(filter, "=X") == 0) return;
 
         /* Accept blank (show all) or a filter */
         str_upper(filter);
